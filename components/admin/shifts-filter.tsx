@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { Calendar as CalendarIcon, User, MapPin, Tag, X, CalendarDays } from "lucide-react"
+import { Calendar as CalendarIcon, User, MapPin, Tag, X, CalendarDays, Sun, Moon } from "lucide-react"
 import { startOfMonth, endOfMonth, subMonths } from "date-fns"
 import type { Doctor } from "@/lib/supabase/types"
 import { useState, useEffect } from "react"
@@ -20,6 +20,10 @@ interface ShiftsFilterProps {
     setFilterArea: (area: string) => void
     filterStatus?: string
     setFilterStatus?: (status: string) => void
+    filterShiftTurn?: string
+    setFilterShiftTurn?: (turn: string) => void
+    filterDayType?: string
+    setFilterDayType?: (dayType: string) => void
     dateFrom?: Date
     setDateFrom?: (date: Date | undefined) => void
     dateTo?: Date
@@ -35,6 +39,10 @@ export function ShiftsFilter({
     setFilterArea,
     filterStatus,
     setFilterStatus,
+    filterShiftTurn,
+    setFilterShiftTurn,
+    filterDayType,
+    setFilterDayType,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -51,6 +59,8 @@ export function ShiftsFilter({
         filterDoctorId !== "all" ||
         filterArea !== "all" ||
         (filterStatus && filterStatus !== "all") ||
+        (filterShiftTurn && filterShiftTurn !== "all") ||
+        (filterDayType && filterDayType !== "all") ||
         dateFrom ||
         dateTo
 
@@ -96,6 +106,44 @@ export function ShiftsFilter({
                     </SelectContent>
                 </Select>
             </div>
+
+            {setFilterShiftTurn && (
+                <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 ml-1">
+                        <Sun className="w-3 h-3 text-slate-400" />
+                        Turno
+                    </label>
+                    <Select value={filterShiftTurn ?? "all"} onValueChange={setFilterShiftTurn}>
+                        <SelectTrigger className="w-[130px] bg-white border-slate-200">
+                            <SelectValue placeholder="Todos los turnos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos los turnos</SelectItem>
+                            <SelectItem value="dia">🌞 Día</SelectItem>
+                            <SelectItem value="noche">🌙 Noche</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
+            {setFilterDayType && (
+                <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 ml-1">
+                        <CalendarDays className="w-3 h-3 text-slate-400" />
+                        Tipo de Día
+                    </label>
+                    <Select value={filterDayType ?? "all"} onValueChange={setFilterDayType}>
+                        <SelectTrigger className="w-[155px] bg-white border-slate-200">
+                            <SelectValue placeholder="Todos" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos los días</SelectItem>
+                            <SelectItem value="semana">📅 Semana</SelectItem>
+                            <SelectItem value="finde">🎉 Fin de Semana</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
 
             {setFilterStatus && (
                 <div className="space-y-2">

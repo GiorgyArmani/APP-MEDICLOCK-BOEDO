@@ -12,6 +12,7 @@ import { Download, Calendar as CalendarIcon, Users, Clock, CheckCircle2 } from "
 import Link from "next/link"
 import { useEffect } from "react"
 import { ShiftsCalendar } from "@/components/dashboard/shifts-calendar"
+import { getShiftTurn, getDayType } from "@/lib/utils/export-utils"
 
 interface HonorariosShiftsListProps {
     shifts: Shift[]
@@ -22,6 +23,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
     const [isMounted, setIsMounted] = useState(false)
     const [filterDoctorId, setFilterDoctorId] = useState<string>("all")
     const [filterArea, setFilterArea] = useState<string>("all")
+    const [filterShiftTurn, setFilterShiftTurn] = useState<string>("all")
+    const [filterDayType, setFilterDayType] = useState<string>("all")
     const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()))
     const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()))
 
@@ -34,14 +37,28 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
             const matchesDoctor = filterDoctorId === "all" || shift.doctor_id === filterDoctorId
             const matchesArea = filterArea === "all" || shift.shift_area === filterArea
 
+            // Turno filter
+            const turn = getShiftTurn(shift.shift_hours)
+            const matchesTurn =
+                filterShiftTurn === "all" ||
+                (filterShiftTurn === "dia" && turn === "Día") ||
+                (filterShiftTurn === "noche" && turn === "Noche")
+
+            // Day type filter
+            const dayType = getDayType(shift.shift_date)
+            const matchesDayType =
+                filterDayType === "all" ||
+                (filterDayType === "semana" && dayType === "Semana") ||
+                (filterDayType === "finde" && dayType === "Fin de Semana")
+
             // Date filtering
             const shiftDate = new Date(shift.shift_date + "T00:00:00")
             const matchesDateFrom = !dateFrom || shiftDate >= dateFrom
             const matchesDateTo = !dateTo || shiftDate <= dateTo
 
-            return matchesDoctor && matchesArea && matchesDateFrom && matchesDateTo
+            return matchesDoctor && matchesArea && matchesTurn && matchesDayType && matchesDateFrom && matchesDateTo
         })
-    }, [shifts, filterDoctorId, filterArea, dateFrom, dateTo])
+    }, [shifts, filterDoctorId, filterArea, filterShiftTurn, filterDayType, dateFrom, dateTo])
 
     const newShifts = filteredShifts.filter((s) => s.status === "new")
     const freeShifts = filteredShifts.filter((s) => s.status === "free" || s.status === "free_pending")
@@ -52,6 +69,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
     const clearFilters = () => {
         setFilterDoctorId("all")
         setFilterArea("all")
+        setFilterShiftTurn("all")
+        setFilterDayType("all")
         setDateFrom(undefined)
         setDateTo(undefined)
     }
@@ -127,6 +146,10 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                 setFilterDoctorId={setFilterDoctorId}
                 filterArea={filterArea}
                 setFilterArea={setFilterArea}
+                filterShiftTurn={filterShiftTurn}
+                setFilterShiftTurn={setFilterShiftTurn}
+                filterDayType={filterDayType}
+                setFilterDayType={setFilterDayType}
                 dateFrom={dateFrom}
                 setDateFrom={setDateFrom}
                 dateTo={dateTo}

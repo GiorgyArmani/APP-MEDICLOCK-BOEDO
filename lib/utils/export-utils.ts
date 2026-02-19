@@ -2,8 +2,9 @@ import type { Shift, Doctor } from "@/lib/supabase/types"
 
 export interface ShiftExportData {
     doctorName: string
-    doctorEmail: string
     shiftDate: string
+    shiftTurn: string    // "Día" | "Noche"
+    dayType: string      // "Semana" | "Fin de Semana"
     shiftArea: string
     shiftCategory: string
     shiftHours: string
@@ -15,6 +16,27 @@ export interface ShiftExportData {
 }
 
 /**
+ * Derives the shift turn (Día / Noche) from the shift_hours field.
+ * Night shifts start at 20:00 (hours string starts with "20").
+ */
+export function getShiftTurn(hours: string): string {
+    const trimmed = hours.trim().toLowerCase()
+    if (trimmed.startsWith("20") || trimmed === "20-8" || trimmed === "20-08") {
+        return "Noche"
+    }
+    return "Día"
+}
+
+/**
+ * Derives whether a shift falls on a weekday or weekend from the shift_date string.
+ */
+export function getDayType(dateStr: string): string {
+    const date = new Date(dateStr + "T00:00:00")
+    const day = date.getDay() // 0 = Sunday, 6 = Saturday
+    return day === 0 || day === 6 ? "Fin de Semana" : "Semana"
+}
+
+/**
  * Formats shift data for export
  */
 export function formatShiftDataForExport(shifts: Shift[], doctors: Doctor[]): ShiftExportData[] {
@@ -23,8 +45,9 @@ export function formatShiftDataForExport(shifts: Shift[], doctors: Doctor[]): Sh
 
         return {
             doctorName: doctor?.full_name || "Sin asignar",
-            doctorEmail: doctor?.email || "-",
             shiftDate: formatDateForExport(shift.shift_date),
+            shiftTurn: getShiftTurn(shift.shift_hours),
+            dayType: getDayType(shift.shift_date),
             shiftArea: formatArea(shift.shift_area),
             shiftCategory: shift.shift_category,
             shiftHours: shift.shift_hours,
@@ -43,8 +66,9 @@ export function formatShiftDataForExport(shifts: Shift[], doctors: Doctor[]): Sh
 export function generateCSV(data: ShiftExportData[]): string {
     const headers = [
         "Médico",
-        "Email",
         "Fecha",
+        "Turno",
+        "Tipo de Día",
         "Área",
         "Categoría",
         "Horario",
@@ -57,8 +81,9 @@ export function generateCSV(data: ShiftExportData[]): string {
 
     const rows = data.map((row) => [
         row.doctorName,
-        row.doctorEmail,
         row.shiftDate,
+        row.shiftTurn,
+        row.dayType,
         row.shiftArea,
         row.shiftCategory,
         row.shiftHours,
@@ -106,9 +131,11 @@ export function downloadCSV(csvContent: string, filename: string) {
  */
 export interface DoctorMonthlySummary {
     doctorName: string
-    doctorEmail: string
     totalShifts: number
     confirmedShifts: number
+    dayShifts: number
+    nightShifts: number
+    weekendShifts: number
     totalHours: number
     shifts: ShiftExportData[]
 }
@@ -128,9 +155,11 @@ export function generateMonthlySummary(
         if (!doctorMap.has(shift.doctor_id)) {
             doctorMap.set(shift.doctor_id, {
                 doctorName: doctor.full_name,
-                doctorEmail: doctor.email,
                 totalShifts: 0,
                 confirmedShifts: 0,
+                dayShifts: 0,
+                nightShifts: 0,
+                weekendShifts: 0,
                 totalHours: 0,
                 shifts: [],
             })
@@ -143,6 +172,13 @@ export function generateMonthlySummary(
             summary.confirmedShifts++
         }
 
+        const turn = getShiftTurn(shift.shift_hours)
+        if (turn === "Noche") summary.nightShifts++
+        else summary.dayShifts++
+
+        const dayType = getDayType(shift.shift_date)
+        if (dayType === "Fin de Semana") summary.weekendShifts++
+
         // Calculate hours if clock in/out are available
         if (shift.clock_in && shift.clock_out) {
             const clockIn = new Date(shift.clock_in)
@@ -153,8 +189,9 @@ export function generateMonthlySummary(
 
         summary.shifts.push({
             doctorName: doctor.full_name,
-            doctorEmail: doctor.email,
             shiftDate: formatDateForExport(shift.shift_date),
+            shiftTurn: turn,
+            dayType: dayType,
             shiftArea: formatArea(shift.shift_area),
             shiftCategory: shift.shift_category,
             shiftHours: shift.shift_hours,
@@ -177,17 +214,21 @@ export function generateMonthlySummary(
 export function generateMonthlySummaryCSV(summaries: DoctorMonthlySummary[]): string {
     const headers = [
         "Médico",
-        "Email",
         "Total Guardias",
         "Guardias Confirmadas",
+        "Turno Día",
+        "Turno Noche",
+        "Fin de Semana",
         "Horas Totales",
     ]
 
     const rows = summaries.map((summary) => [
         summary.doctorName,
-        summary.doctorEmail,
         summary.totalShifts.toString(),
         summary.confirmedShifts.toString(),
+        summary.dayShifts.toString(),
+        summary.nightShifts.toString(),
+        summary.weekendShifts.toString(),
         summary.totalHours.toFixed(2),
     ])
 
@@ -206,19 +247,19 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
     const { jsPDF } = await import("jspdf")
     const autoTable = (await import("jspdf-autotable")).default
 
-    const doc = new jsPDF()
+    const doc = new jsPDF({ orientation: "landscape" })
 
     // Add Logo if provided
     if (logoBase64) {
         try {
-            doc.addImage(logoBase64, "PNG", 160, 10, 35, 12)
+            doc.addImage(logoBase64, "PNG", 240, 10, 35, 12)
         } catch (e) {
             console.error("Error adding logo to PDF:", e)
         }
     }
 
     // Title
-    doc.setFontSize(22)
+    doc.setFontSize(20)
     doc.setTextColor(30, 41, 59) // slate-800
     doc.text(title, 14, 22)
 
@@ -230,19 +271,25 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
     // Table
     autoTable(doc, {
         startY: 40,
-        head: [["Médico", "Fecha", "Área", "Horario", "Entrada", "Salida", "Estado"]],
+        head: [["Médico", "Fecha", "Turno", "Tipo de Día", "Área", "Horario", "Entrada", "Salida", "Estado"]],
         body: data.map(r => [
             r.doctorName,
             r.shiftDate,
+            r.shiftTurn,
+            r.dayType,
             r.shiftArea,
             r.shiftHours,
             r.clockIn,
             r.clockOut,
             r.status
         ]),
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { fontSize: 7, cellPadding: 2 },
         headStyles: { fillColor: [59, 130, 246], textColor: 255 }, // blue-500
         alternateRowStyles: { fillColor: [248, 250, 252] }, // slate-50
+        columnStyles: {
+            2: { cellWidth: 16 }, // Turno
+            3: { cellWidth: 28 }, // Tipo de Día
+        }
     })
 
     doc.save(`${title.replace(/\s+/g, "_")}.pdf`)
@@ -279,12 +326,14 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
     // Table
     autoTable(doc, {
         startY: 40,
-        head: [["Médico", "Email", "Total Guardias", "Confirmadas", "Horas Totales"]],
+        head: [["Médico", "Total Guardias", "Confirmadas", "Turno Día", "Turno Noche", "Fin de Semana", "Horas Totales"]],
         body: summaries.map(s => [
             s.doctorName,
-            s.doctorEmail,
             s.totalShifts.toString(),
             s.confirmedShifts.toString(),
+            s.dayShifts.toString(),
+            s.nightShifts.toString(),
+            s.weekendShifts.toString(),
             s.totalHours.toFixed(2)
         ]),
         styles: { fontSize: 9, cellPadding: 3 },

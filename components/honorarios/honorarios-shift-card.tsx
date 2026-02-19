@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, MapPin } from "lucide-react"
 import { SHIFT_TYPES } from "@/lib/constants/shift-types"
+import { getShiftTurn, getDayType } from "@/lib/utils/export-utils"
 
 interface HonorariosShiftCardProps {
     shift: Shift
@@ -41,6 +42,11 @@ export function HonorariosShiftCard({ shift, doctors }: HonorariosShiftCardProps
     const shiftLabel = shiftTypeInfo?.label || shift.shift_category
 
     const assignedDoctor = shift.doctor_id ? doctors.find((d) => d.id === shift.doctor_id) : null
+
+    const turn = getShiftTurn(shift.shift_hours)
+    const dayType = getDayType(shift.shift_date)
+    const isNight = turn === "Noche"
+    const isWeekend = dayType === "Fin de Semana"
 
     return (
         <Card className="hover:shadow-md transition-shadow">
@@ -102,6 +108,24 @@ export function HonorariosShiftCard({ shift, doctors }: HonorariosShiftCardProps
                         <Calendar className="h-4 w-4 text-slate-400" />
                         <span>{formatDate(shift.shift_date)}</span>
                     </div>
+                </div>
+
+                {/* Turno + Tipo de Día badges */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge
+                        className={isNight
+                            ? "bg-indigo-100 text-indigo-800 border-indigo-200"
+                            : "bg-amber-100 text-amber-800 border-amber-200"}
+                    >
+                        {isNight ? "🌙 Turno Noche" : "🌞 Turno Día"}
+                    </Badge>
+                    <Badge
+                        className={isWeekend
+                            ? "bg-purple-100 text-purple-800 border-purple-200"
+                            : "bg-slate-100 text-slate-700 border-slate-200"}
+                    >
+                        {isWeekend ? "🎉 Fin de Semana" : "📅 Semana"}
+                    </Badge>
                 </div>
 
                 {/* Clock In/Out Times - Prominent Display */}

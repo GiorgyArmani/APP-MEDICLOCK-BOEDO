@@ -17,6 +17,8 @@ import {
     generatePDF,
     generateMonthlySummaryPDF,
     getBase64ImageFromURL,
+    getShiftTurn,
+    getDayType,
 } from "@/lib/utils/export-utils"
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { es } from "date-fns/locale"
@@ -34,6 +36,8 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
     const [isMounted, setIsMounted] = useState(false)
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("all")
     const [selectedArea, setSelectedArea] = useState<string>("all")
+    const [selectedTurn, setSelectedTurn] = useState<string>("all")
+    const [selectedDayType, setSelectedDayType] = useState<string>("all")
     const [reportType, setReportType] = useState<"detailed" | "summary">("detailed")
     const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()))
     const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()))
@@ -42,28 +46,34 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
         setIsMounted(true)
     }, [])
 
-    // Debug logging (will keep temporarily for verification)
-    console.log("🔍 ReportsGenerator - Total shifts received:", shifts.length)
-    console.log("🔍 ReportsGenerator - Total doctors received:", doctors.length)
-
     // Filter shifts based on selections
     const filteredShifts = useMemo(() => {
         return shifts.filter((shift) => {
             const matchesDoctor = selectedDoctorId === "all" || shift.doctor_id === selectedDoctorId
             const matchesArea = selectedArea === "all" || shift.shift_area === selectedArea
 
+            const turn = getShiftTurn(shift.shift_hours)
+            const matchesTurn =
+                selectedTurn === "all" ||
+                (selectedTurn === "dia" && turn === "Día") ||
+                (selectedTurn === "noche" && turn === "Noche")
+
+            const dayType = getDayType(shift.shift_date)
+            const matchesDayType =
+                selectedDayType === "all" ||
+                (selectedDayType === "semana" && dayType === "Semana") ||
+                (selectedDayType === "finde" && dayType === "Fin de Semana")
+
             // Date filtering
             const shiftDate = new Date(shift.shift_date + "T00:00:00")
             const matchesDateFrom = !dateFrom || shiftDate >= dateFrom
             const matchesDateTo = !dateTo || shiftDate <= dateTo
 
-            return matchesDoctor && matchesArea && matchesDateFrom && matchesDateTo
+            return matchesDoctor && matchesArea && matchesTurn && matchesDayType && matchesDateFrom && matchesDateTo
         })
-    }, [shifts, selectedDoctorId, selectedArea, dateFrom, dateTo])
+    }, [shifts, selectedDoctorId, selectedArea, selectedTurn, selectedDayType, dateFrom, dateTo])
 
     const handleExport = async (exportFormat: "csv" | "pdf") => {
-        console.log(`📊 Export triggered (${exportFormat}) - Filtered shifts count:`, filteredShifts.length)
-
         if (filteredShifts.length === 0) {
             toast.error("No hay guardias para exportar con los filtros seleccionados")
             return
@@ -231,23 +241,60 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                     )}
                 </div>
 
-                {/* Area Selection */}
-                <div className="space-y-2">
-                    <Label htmlFor="area-select" className="text-sm font-semibold text-slate-700">
-                        Área
-                    </Label>
-                    <Select value={selectedArea} onValueChange={setSelectedArea}>
-                        <SelectTrigger id="area-select">
-                            <SelectValue placeholder="Seleccionar área" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todas las áreas</SelectItem>
-                            <SelectItem value="consultorio">Consultorio</SelectItem>
-                            <SelectItem value="internacion">Internación</SelectItem>
-                            <SelectItem value="refuerzo">Refuerzo</SelectItem>
-                            <SelectItem value="completo">Completo</SelectItem>
-                        </SelectContent>
-                    </Select>
+                {/* Area + Turn + Day Type filters in a responsive grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Area Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="area-select" className="text-sm font-semibold text-slate-700">
+                            Área
+                        </Label>
+                        <Select value={selectedArea} onValueChange={setSelectedArea}>
+                            <SelectTrigger id="area-select">
+                                <SelectValue placeholder="Seleccionar área" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas las áreas</SelectItem>
+                                <SelectItem value="consultorio">Consultorio</SelectItem>
+                                <SelectItem value="internacion">Internación</SelectItem>
+                                <SelectItem value="refuerzo">Refuerzo</SelectItem>
+                                <SelectItem value="completo">Completo</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Turno Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="turn-select" className="text-sm font-semibold text-slate-700">
+                            Turno
+                        </Label>
+                        <Select value={selectedTurn} onValueChange={setSelectedTurn}>
+                            <SelectTrigger id="turn-select">
+                                <SelectValue placeholder="Todos los turnos" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los turnos</SelectItem>
+                                <SelectItem value="dia">🌞 Día</SelectItem>
+                                <SelectItem value="noche">🌙 Noche</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Day Type Selection */}
+                    <div className="space-y-2">
+                        <Label htmlFor="daytype-select" className="text-sm font-semibold text-slate-700">
+                            Tipo de Día
+                        </Label>
+                        <Select value={selectedDayType} onValueChange={setSelectedDayType}>
+                            <SelectTrigger id="daytype-select">
+                                <SelectValue placeholder="Todos los días" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los días</SelectItem>
+                                <SelectItem value="semana">📅 Semana</SelectItem>
+                                <SelectItem value="finde">🎉 Fin de Semana</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 {/* Report Type Selection */}
@@ -266,15 +313,15 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                     </Select>
                     <p className="text-xs text-slate-500 mt-1">
                         {reportType === "detailed"
-                            ? "Incluye todas las guardias con fecha, horarios, entrada/salida, etc."
-                            : "Resumen con total de guardias y horas trabajadas por médico"}
+                            ? "Incluye todas las guardias con fecha, turno, tipo de día, horarios, entrada/salida, etc."
+                            : "Resumen con total de guardias, desglose día/noche/finde y horas trabajadas por médico"}
                     </p>
                 </div>
 
                 {/* Preview Stats */}
                 <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <p className="text-sm font-semibold text-slate-700 mb-2">Vista Previa</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-3">Vista Previa</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div>
                             <p className="text-xs text-slate-500">Guardias a exportar</p>
                             <p className="text-2xl font-bold text-slate-900">{filteredShifts.length}</p>
@@ -283,6 +330,32 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                             <p className="text-xs text-slate-500">Médicos involucrados</p>
                             <p className="text-2xl font-bold text-slate-900">
                                 {new Set(filteredShifts.map((s) => s.doctor_id).filter(Boolean)).size}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-500">🌞 Turno Día</p>
+                            <p className="text-2xl font-bold text-amber-600">
+                                {filteredShifts.filter(s => getShiftTurn(s.shift_hours) === "Día").length}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-500">🌙 Turno Noche</p>
+                            <p className="text-2xl font-bold text-indigo-600">
+                                {filteredShifts.filter(s => getShiftTurn(s.shift_hours) === "Noche").length}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
+                        <div>
+                            <p className="text-xs text-slate-500">📅 Guardias de Semana</p>
+                            <p className="text-xl font-bold text-slate-700">
+                                {filteredShifts.filter(s => getDayType(s.shift_date) === "Semana").length}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-500">🎉 Fin de Semana</p>
+                            <p className="text-xl font-bold text-slate-700">
+                                {filteredShifts.filter(s => getDayType(s.shift_date) === "Fin de Semana").length}
                             </p>
                         </div>
                     </div>
