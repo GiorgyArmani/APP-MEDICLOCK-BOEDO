@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
+import { LandingPage } from "@/app/marketing/landing-page"
 
 export default async function HomePage() {
   const doctor = await getCurrentDoctor()
 
   if (!doctor) {
-    redirect("/login")
+    return <LandingPage />
   }
 
   if (doctor.role === "administrator") {
