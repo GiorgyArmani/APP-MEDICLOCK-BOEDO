@@ -123,7 +123,6 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, ...pro
                 <StatusBadge color="bg-blue-600" label="Internación" />
                 <StatusBadge color="bg-orange-600" label="Refuerzo" />
                 <StatusBadge color="bg-indigo-600" label="Piso" />
-                <StatusBadge color="bg-emerald-600" label="Completo" />
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
 
   const filteredShifts = shifts.filter((shift) => {
     const matchesDoctor = filterDoctorId === "all" || shift.doctor_id === filterDoctorId
-    const matchesArea = filterArea === "all" || shift.shift_area === filterArea
+    const matchesArea = filterArea === "all" || shift.shift_area === filterArea || (filterArea === "consultorio" && shift.shift_area === "completo")
     return matchesDoctor && matchesArea
   })
 

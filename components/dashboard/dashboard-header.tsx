@@ -14,7 +14,7 @@ export function DashboardHeader({ doctor }: DashboardHeaderProps) {
   const roleLabels = {
     internacion: "Internación",
     consultorio: "Consultorio",
-    completo: "Completo",
+    completo: "Consultorio",
     administrator: "Administrador",
     honorarios: "Honorarios",
     doctor: "Médico",

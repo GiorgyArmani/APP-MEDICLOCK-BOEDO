@@ -20,14 +20,14 @@ export function DoctorsGrid({ doctors, shifts }: DoctorsGridProps) {
     const roleLabels = {
         internacion: "Internación",
         consultorio: "Consultorio",
-        completo: "Completo",
+        completo: "Consultorio",
         administrator: "Administrador",
     }
 
     const roleColors = {
         internacion: "bg-blue-100 text-blue-800",
         consultorio: "bg-green-100 text-green-800",
-        completo: "bg-purple-100 text-purple-800",
+        completo: "bg-green-100 text-green-800",
         administrator: "bg-red-100 text-red-800",
     }
 

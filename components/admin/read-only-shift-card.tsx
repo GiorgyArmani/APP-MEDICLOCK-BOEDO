@@ -24,7 +24,7 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
         consultorio: "bg-blue-50 text-blue-700 border-blue-200",
         internacion: "bg-emerald-50 text-emerald-700 border-emerald-200",
         refuerzo: "bg-orange-50 text-orange-700 border-orange-200",
-        completo: "bg-purple-50 text-purple-700 border-purple-200",
+        completo: "bg-purple-50 text-purple-700 border-purple-200", // Added 'completo'
     }
 
     const formatDate = (dateStr: string) => {
@@ -70,14 +70,12 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                         <MapPin className="h-4 w-4 text-slate-400" />
-                        <Badge className={areaColors[shift.shift_area as keyof typeof areaColors]}>
-                            {shift.shift_area === "consultorio"
+                        <Badge className={areaColors[shift.shift_area === "completo" ? "consultorio" : (shift.shift_area as keyof typeof areaColors)]}>
+                            {shift.shift_area === "consultorio" || shift.shift_area === "completo"
                                 ? "Consultorio"
                                 : shift.shift_area === "internacion"
                                     ? "Internación"
-                                    : shift.shift_area === "refuerzo"
-                                        ? "Refuerzo"
-                                        : "Completo"}
+                                    : "Refuerzo"}
                         </Badge>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-600">

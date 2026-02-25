@@ -103,7 +103,6 @@ export function ShiftsFilter({
                         <SelectItem value="internacion">Internación</SelectItem>
                         <SelectItem value="refuerzo">Refuerzo</SelectItem>
                         <SelectItem value="piso">Piso</SelectItem>
-                        <SelectItem value="completo">Completo</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

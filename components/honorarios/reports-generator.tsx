@@ -50,7 +50,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
     const filteredShifts = useMemo(() => {
         return shifts.filter((shift) => {
             const matchesDoctor = selectedDoctorId === "all" || shift.doctor_id === selectedDoctorId
-            const matchesArea = selectedArea === "all" || shift.shift_area === selectedArea
+            const matchesArea = selectedArea === "all" || shift.shift_area === selectedArea || (selectedArea === "consultorio" && shift.shift_area === "completo")
 
             const turn = getShiftTurn(shift.shift_hours)
             const matchesTurn =
@@ -257,7 +257,6 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                                 <SelectItem value="consultorio">Consultorio</SelectItem>
                                 <SelectItem value="internacion">Internación</SelectItem>
                                 <SelectItem value="refuerzo">Refuerzo</SelectItem>
-                                <SelectItem value="completo">Completo</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
