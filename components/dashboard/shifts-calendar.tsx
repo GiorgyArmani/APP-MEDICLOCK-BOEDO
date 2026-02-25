@@ -104,13 +104,27 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, ...pro
           )}
 
           {/* View Legend */}
-          <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 lg:w-fit">
-            <div className="flex flex-wrap gap-4">
-              <StatusBadge color="bg-orange-500" label="Pendiente" />
-              <StatusBadge color="bg-purple-500" label="Libre" />
-              <StatusBadge color="bg-emerald-500" label="Confirmada" />
-              <StatusBadge color="bg-rose-500" label="Rechazada" />
-              <StatusBadge color="bg-amber-500" label="Pendiente +12h" />
+          <div className="flex flex-col gap-4">
+            <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 lg:w-fit">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Estado</span>
+              <div className="flex flex-wrap gap-4">
+                <StatusBadge color="bg-blue-400" label="Nueva" />
+                <StatusBadge color="bg-amber-400" label="Libre" />
+                <StatusBadge color="bg-emerald-400" label="Confirmada" />
+                <StatusBadge color="bg-rose-400" label="Rechazada" />
+                <StatusBadge color="bg-orange-400" label="Pendiente +12h" />
+              </div>
+            </div>
+
+            <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 lg:w-fit">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Área</span>
+              <div className="flex flex-wrap gap-4">
+                <StatusBadge color="bg-purple-600" label="Consultorio" />
+                <StatusBadge color="bg-blue-600" label="Internación" />
+                <StatusBadge color="bg-orange-600" label="Refuerzo" />
+                <StatusBadge color="bg-indigo-600" label="Piso" />
+                <StatusBadge color="bg-emerald-600" label="Completo" />
+              </div>
             </div>
           </div>
 

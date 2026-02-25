@@ -1,6 +1,6 @@
 "use client"
 
-import { generateCalendarDays, getShiftStatusColor } from "@/lib/utils/calendar"
+import { generateCalendarDays, getShiftStatusColor, getShiftAreaColor, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift } from "@/lib/supabase/types"
 
 interface MonthViewProps {
@@ -43,10 +43,10 @@ export function MonthView({ currentDate, shifts, onDayClick }: MonthViewProps) {
                         <div
                             key={index}
                             onClick={() => onDayClick(dayShifts, dayObj.date)}
-                            className={`min-h-[100px] p-2 border transition-all 
+                            className={`min-h-[110px] p-2 border transition-all 
                 ${hasShifts ? "cursor-pointer hover:shadow-md hover:scale-[1.02]" : ""} 
                 ${hasPendingShifts
-                                    ? "border-orange-400 bg-orange-50 ring-2 ring-orange-200"
+                                    ? "border-orange-400 bg-orange-50/30 ring-1 ring-orange-200"
                                     : hasShifts
                                         ? "border-slate-300 bg-white hover:bg-slate-50"
                                         : "border-slate-200 bg-white"
@@ -65,18 +65,19 @@ export function MonthView({ currentDate, shifts, onDayClick }: MonthViewProps) {
 
                                 {hasShifts && (
                                     <div className="flex-1 space-y-1 overflow-hidden">
-                                        {dayShifts.slice(0, 3).map((shift) => (
+                                        {dayShifts.slice(0, 4).map((shift) => (
                                             <div
                                                 key={shift.id}
-                                                className={`text-[10px] px-1.5 py-0.5 rounded text-white font-medium truncate shadow-sm ${getShiftStatusColor(shift.status || 'new')}`}
-                                                title={`${shift.shift_hours} - ${shift.shift_area}`}
+                                                className={`text-[10px] px-1.5 py-0.5 rounded text-white font-bold truncate shadow-sm flex items-center gap-1 ${getShiftAreaColor(shift.shift_area)}`}
+                                                title={`${shift.shift_hours} - ${shift.shift_area} (${shift.status})`}
                                             >
-                                                {shift.shift_hours}
+                                                <div className={`w-1.5 h-1.5 rounded-full border border-white/30 shrink-0 ${getShiftStatusIndicatorColor(shift.status || 'new')}`} />
+                                                <span className="truncate">{shift.shift_hours}</span>
                                             </div>
                                         ))}
-                                        {dayShifts.length > 3 && (
-                                            <div className="text-[10px] text-slate-500 font-medium px-1">
-                                                +{dayShifts.length - 3} más
+                                        {dayShifts.length > 4 && (
+                                            <div className="text-[10px] text-slate-500 font-bold px-1">
+                                                +{dayShifts.length - 4} más
                                             </div>
                                         )}
                                     </div>

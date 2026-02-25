@@ -1,6 +1,6 @@
 "use client"
 
-import { parseShiftTime, getShiftStatusColor, getVisualShiftsForDate } from "@/lib/utils/calendar"
+import { parseShiftTime, getShiftStatusColor, getVisualShiftsForDate, getShiftAreaStyles, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift } from "@/lib/supabase/types"
 
 interface DayViewProps {
@@ -17,6 +17,7 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
 
     // Layout Algorithm: Group and assign columns
     const segmentsWithLayout = useMemo(() => {
+        // ... (layout algorithm lines 20-145)
         // 1. Sort by start time, then duration (longer first to optimize packing)
         const sorted = [...rawSegments].sort((a, b) => {
             const startA = a.start + a.startMinutes / 60
@@ -28,26 +29,15 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
         })
 
         // 2. Resolve intersections
-        // Simple approach: Pack into columns
-        // We will assign a 'column' and 'totalColumns' to each segment for its group.
-        // But simple column packing for the whole day is easier and usually sufficient.
         const columns: (typeof rawSegments)[] = []
 
         const positionedSegments = sorted.map(segment => {
             const segStart = segment.start + segment.startMinutes / 60
             const segEnd = segment.end + segment.endMinutes / 60
 
-            // Find first column where this segment fits
             let colIndex = 0
             for (let i = 0; i < columns.length; i++) {
                 const column = columns[i]
-                // Check if it overlaps with the last element in this column
-                // Since we sorted by start time, we only need to check the last one? 
-                // No, we need to check collision with ANY in that column that overlaps time.
-                // But simplified: check if start >= last.end
-                // Actually, strictly correct packing needs interval tree, but greedy works well for calendars.
-                // We just need to find a column where it DOES NOT overlap with any existing item.
-
                 const hasOverlap = column.some(existing => {
                     const exStart = existing.start + existing.startMinutes / 60
                     const exEnd = existing.end + existing.endMinutes / 60
@@ -69,18 +59,6 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
             return { ...segment, colIndex }
         })
 
-        // Now we really want to know the "width" of the cluster this segment belongs to.
-        // A simple approximation is "total columns used today" but that makes single shifts thin.
-        // Better: For each segment, calculate the maximum column index of any segment it overlaps with.
-
-        // Let's stick to a simpler robust rendering:
-        // Render with left = (colIndex * 100 / columns.length)%
-        // width = (100 / columns.length)%
-        // This is "All day strict columns". If I have 11 overlapping at 8am, 11 columns for the whole day.
-        // This solves the visibility. Optimization (collapsing empty columns) is a bonus.
-        // Let's refine: "Group connected components".
-
-        // Re-implementing simplified clustering inline for robustness without complexity:
         const clusters: { start: number, end: number, segments: typeof positionedSegments }[] = []
 
         positionedSegments.sort((a, b) => (a.start + a.startMinutes / 60) - (b.start + b.startMinutes / 60))
@@ -89,8 +67,7 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
             const segStart = seg.start + seg.startMinutes / 60
             const segEnd = seg.end + seg.endMinutes / 60
 
-            // Try to add to existing cluster
-            const cluster = clusters.find(c => segStart < c.end) // Overlaps or touches end? Usually strictly <
+            const cluster = clusters.find(c => segStart < c.end)
 
             if (cluster) {
                 cluster.segments.push(seg)
@@ -100,11 +77,9 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
             }
         }
 
-        // Process each cluster to assign local columns
         const finalSegments: any[] = []
 
         clusters.forEach(cluster => {
-            // Local column packing for the cluster
             const clusterCols: any[][] = []
             const placements: { segment: any, colIndex: number }[] = []
 
@@ -130,7 +105,6 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
                 }
             })
 
-            // Update totalCols for everyone in this cluster
             const total = clusterCols.length
 
             placements.forEach(p => {
@@ -143,7 +117,6 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
         })
 
         return finalSegments
-
     }, [rawSegments])
 
 
@@ -207,19 +180,14 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
 
                             const height = (durationHours * HOUR_HEIGHT) + (durationMinutes * (HOUR_HEIGHT / 60))
 
-                            // Width logic
-                            // If totalCols is large, we might want to respect a min-width?
-                            // For now, let's keep percent but ensure we don't break.
-                            // If we have > 5 cols, it gets very thin.
-
                             const widthPercent = 100 / totalCols
                             const leftPercent = colIndex * widthPercent
 
                             return (
                                 <div
                                     key={`${shift.id}-${index}`}
-                                    className={`absolute rounded-md p-2 border shadow-sm cursor-pointer hover:shadow-lg hover:z-50 transition-all flex flex-col justify-start overflow-hidden
-                            ${getShiftStatusColor(shift.status || 'new')}
+                                    className={`absolute rounded-md p-2.5 border shadow-sm cursor-pointer hover:shadow-lg hover:z-50 transition-all flex flex-col justify-start overflow-hidden
+                            ${getShiftAreaStyles(shift.shift_area)}
                             ${isContinuation ? 'rounded-t-none border-t-0 opacity-90' : ''}
                             ${isOvernightStart ? 'rounded-b-none border-b-0' : ''}
                         `}
@@ -241,18 +209,11 @@ export function DayView({ currentDate, shifts, onShiftClick }: DayViewProps) {
                                             <div className="font-bold text-xs sm:text-sm truncate leading-tight">
                                                 {isContinuation ? 'Cont. ' : ''}{shift.shift_hours}
                                             </div>
-                                            <div className="font-medium text-xs truncate leading-tight">{shift.shift_category}</div>
+                                            <div className="font-bold text-xs truncate leading-tight opacity-90">{shift.shift_category}</div>
                                         </div>
-                                        {/* Only show badge if enough space */}
-                                        {totalCols < 3 && (
-                                            <div className="text-[10px] px-1.5 py-0.5 bg-white/50 rounded-full font-medium uppercase shrink-0">
-                                                {shift.status === 'confirmed' ? 'Conf.' :
-                                                    shift.status === 'free' ? 'Libre' :
-                                                        shift.status === 'new' ? 'New' : 'Pend'}
-                                            </div>
-                                        )}
+                                        <div className={`w-2 h-2 rounded-full shrink-0 mt-1 shadow-sm ${getShiftStatusIndicatorColor(shift.status || 'new')}`} />
                                     </div>
-                                    <div className="mt-1 text-xs opacity-90 truncate">
+                                    <div className="mt-1 text-xs opacity-80 font-medium truncate uppercase tracking-wider">
                                         {shift.shift_area}
                                     </div>
                                     {shift.notes && totalCols < 4 && (

@@ -12,6 +12,8 @@ export const SHIFT_TYPES = [
     { value: "noche_consultorio_a", label: "Noche consultorio A", area: "consultorio", hours: "20-8" },
     { value: "noche_internacion_1", label: "Noche Internación", area: "internacion", hours: "20-8" },
     { value: "noche_internacion_2", label: "Noche Internación", area: "internacion", hours: "20-8" },
+    { value: "piso_8_14", label: "Piso 8-14", area: "piso", hours: "8-14" },
+    { value: "piso_14_20", label: "Piso 14-20", area: "piso", hours: "14-20" },
     { value: "remplazo_socios", label: "Reemplazo Socios", area: "completo", hours: "variable" },
 ] as const
 

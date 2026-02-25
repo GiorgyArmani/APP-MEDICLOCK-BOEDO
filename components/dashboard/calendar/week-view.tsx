@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getWeekDays, parseShiftTime, getShiftStatusColor, getVisualShiftsForDate } from "@/lib/utils/calendar"
+import { getWeekDays, parseShiftTime, getShiftStatusColor, getVisualShiftsForDate, getShiftAreaStyles, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift } from "@/lib/supabase/types"
 
 interface WeekViewProps {
@@ -120,10 +120,8 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick }: Week
                                             return (
                                                 <div
                                                     key={`${shift.id}-${segIdx}`}
-                                                    className={`absolute inset-x-[2px] rounded border-l-4 px-2 py-1 text-xs overflow-hidden leading-tight shadow-sm cursor-pointer hover:shadow-md hover:z-30 hover:inset-x-0 transition-all group
-                                                ${getShiftStatusColor(shift.status || 'new')}
-                                                border-opacity-100
-                                                bg-opacity-90 hover:bg-opacity-100
+                                                    className={`absolute inset-x-[2px] rounded border px-2 py-1.5 text-xs overflow-hidden leading-tight shadow-sm cursor-pointer hover:shadow-md hover:z-30 hover:inset-x-0 transition-all group
+                                                ${getShiftAreaStyles(shift.shift_area)}
                                                 ${isContinuation ? 'rounded-t-none border-t-0 opacity-80' : ''}
                                                 ${isOvernightStart ? 'rounded-b-none border-b-0' : ''}
                                             `}
@@ -137,8 +135,9 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick }: Week
                                                         onShiftClick(shift)
                                                     }}
                                                 >
-                                                    <div className="font-semibold text-[11px] flex justify-between">
-                                                        <span>{isContinuation ? 'Cont.' : shift.shift_hours}</span>
+                                                    <div className="font-bold text-[11px] flex justify-between items-center gap-1">
+                                                        <span className="truncate">{isContinuation ? 'Cont.' : shift.shift_hours}</span>
+                                                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getShiftStatusIndicatorColor(shift.status || 'new')}`} />
                                                     </div>
                                                     <div className="font-bold truncate text-[11px]">{shift.shift_area}</div>
                                                     {height > 30 && (

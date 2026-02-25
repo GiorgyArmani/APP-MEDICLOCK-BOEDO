@@ -96,16 +96,59 @@ export function getShiftStatusColor(status: string): string {
 }
 
 /**
- * Get shift area color
+ * Get simple status indicator color (for dots)
+ */
+export function getShiftStatusIndicatorColor(status: string): string {
+    const colors: Record<string, string> = {
+        new: 'bg-blue-400',
+        confirmed: 'bg-emerald-400',
+        rejected: 'bg-rose-400',
+        free: 'bg-amber-400',
+        free_pending: 'bg-orange-400'
+    }
+    return colors[status] || 'bg-slate-400'
+}
+
+/**
+ * Get shift area color (primary color)
  */
 export function getShiftAreaColor(area: string): string {
     const colors: Record<string, string> = {
+        consultorio: 'bg-purple-600',
+        internacion: 'bg-blue-600',
+        refuerzo: 'bg-orange-600',
+        completo: 'bg-emerald-600',
+        piso: 'bg-indigo-600'
+    }
+    return colors[area] || 'bg-slate-600'
+}
+
+/**
+ * Get full shift area styles for calendar cards
+ */
+export function getShiftAreaStyles(area: string): string {
+    const styles: Record<string, string> = {
+        consultorio: 'bg-purple-50 border-purple-200 text-purple-900',
+        internacion: 'bg-blue-50 border-blue-200 text-blue-900',
+        refuerzo: 'bg-orange-50 border-orange-200 text-orange-900',
+        completo: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        piso: 'bg-indigo-50 border-indigo-200 text-indigo-900'
+    }
+    return styles[area] || 'bg-slate-50 border-slate-200 text-slate-900'
+}
+
+/**
+ * Get area-specific accent color for indicators
+ */
+export function getShiftAreaAccentColor(area: string): string {
+    const accents: Record<string, string> = {
         consultorio: 'bg-purple-500',
         internacion: 'bg-blue-500',
         refuerzo: 'bg-orange-500',
-        completo: 'bg-green-500'
+        completo: 'bg-emerald-500',
+        piso: 'bg-indigo-500'
     }
-    return colors[area] || 'bg-gray-500'
+    return accents[area] || 'bg-slate-500'
 }
 
 /**
