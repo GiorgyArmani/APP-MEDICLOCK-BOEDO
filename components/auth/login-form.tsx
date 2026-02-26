@@ -76,12 +76,7 @@ export function LoginForm() {
         {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
       </Button>
 
-      <p className="text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link href="/signup" className="text-primary hover:underline font-medium">
-          Registrarse
-        </Link>
-      </p>
+
     </form>
   )
 }
