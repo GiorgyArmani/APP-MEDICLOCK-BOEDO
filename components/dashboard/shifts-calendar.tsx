@@ -18,11 +18,17 @@ interface ShiftsCalendarProps {
   doctors?: Doctor[] // Optional, only for admin view
   currentDoctor?: Doctor
   readOnly?: boolean
+  /** Fecha inicial del calendario (default: hoy) */
+  initialDate?: Date
+  /** Callback cuando se navega entre meses (solo mode=month). Admin usa esto para hacer router.push */
+  onMonthNavigate?: (date: Date) => void
 }
 
-export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, ...props }: ShiftsCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date())
+
+export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initialDate, onMonthNavigate, ...props }: ShiftsCalendarProps) {
+  const [currentDate, setCurrentDate] = useState(initialDate ?? new Date())
   const [view, setView] = useState<"month" | "week" | "day">("month")
+
 
   // Filter State
   const [filterDoctorId, setFilterDoctorId] = useState<string>("all")
@@ -84,9 +90,23 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, ...pro
           date={currentDate}
           view={view}
           onViewChange={setView}
-          onDateChange={setCurrentDate}
-          onToday={() => setCurrentDate(new Date())}
+          onDateChange={(newDate) => {
+            setCurrentDate(newDate)
+            // If admin provided a month-navigate callback AND we are in month view,
+            // fire it so the server can re-fetch the correct date range.
+            if (onMonthNavigate && view === "month") {
+              onMonthNavigate(newDate)
+            }
+          }}
+          onToday={() => {
+            const today = new Date()
+            setCurrentDate(today)
+            if (onMonthNavigate && view === "month") {
+              onMonthNavigate(today)
+            }
+          }}
         />
+
 
         <CardContent className="pt-6 flex-1 space-y-6">
           {/* Admin Filters Row */}

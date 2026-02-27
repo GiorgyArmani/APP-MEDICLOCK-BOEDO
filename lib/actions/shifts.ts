@@ -26,6 +26,31 @@ export async function getShifts(): Promise<Shift[]> {
 }
 
 /**
+ * Fetches all shifts within a date range using the admin client (bypasses the
+ * Supabase 1000-row default page limit and RLS, so every shift in the period
+ * is returned). Used by the calendar and any view that needs complete data for
+ * a specific time window.
+ */
+export async function getShiftsByDateRange(dateFrom: string, dateTo: string): Promise<Shift[]> {
+  const adminSupabase = await getSupabaseAdminClient()
+
+  const { data: shifts, error } = await adminSupabase
+    .from("shifts")
+    .select("*")
+    .gte("shift_date", dateFrom)
+    .lte("shift_date", dateTo)
+    .order("shift_date", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching shifts by date range:", error)
+    return []
+  }
+
+  return shifts as Shift[]
+}
+
+
+/**
  * Special fetcher for Honorarios role that uses the Admin client 
  * to bypass RLS and ensure all data is visible for auditing.
  */
@@ -863,4 +888,181 @@ export async function saveDoctorNotes(shiftId: string, doctorId: string, notes: 
 
   revalidatePath("/dashboard")
   return { data }
+}
+
+export interface DashboardStats {
+  // Period stats
+  totalShifts: number
+  confirmedShifts: number
+  pendingShifts: number
+  freeShifts: number
+  // Area breakdown for the period
+  byArea: {
+    consultorio: number
+    internacion: number
+    refuerzo: number
+    piso: number
+  }
+  // Weekly breakdown (current week, 7 days)
+  weeklyBreakdown: Array<{
+    date: string       // "2026-02-27"
+    label: string      // "Vie 27"
+    total: number
+    confirmed: number
+    pending: number
+  }>
+  // Previous period totals (for % change comparison)
+  prevTotalShifts: number
+  prevConfirmedShifts: number
+  // Total doctors
+  totalDoctors: number
+}
+
+/**
+ * Obtiene estadísticas del dashboard usando COUNT queries (sin límite de 1000 filas).
+ * dateFrom / dateTo deben estar en formato "yyyy-MM-dd".
+ */
+export async function getDashboardStats(
+  dateFrom: string,
+  dateTo: string,
+): Promise<DashboardStats> {
+  const adminSupabase = await getSupabaseAdminClient()
+
+  // --- Current period counts ---
+  const [
+    { count: totalShifts },
+    { count: confirmedShifts },
+    { count: pendingShifts },
+    { count: freeShifts },
+    // Area breakdown
+    { count: areaConsultorio },
+    { count: areaInternacion },
+    { count: areaRefuerzo },
+    { count: areaPiso },
+    // Doctors count
+    { count: totalDoctors },
+  ] = await Promise.all([
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .eq("status", "confirmed"),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .in("status", ["new", "free_pending"]),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .eq("status", "free"),
+    // Areas
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .in("shift_area", ["consultorio", "completo"]),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .eq("shift_area", "internacion"),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .eq("shift_area", "refuerzo"),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .eq("shift_area", "piso"),
+    // Doctors
+    adminSupabase
+      .from("doctors")
+      .select("*", { count: "exact", head: true }),
+  ])
+
+  // --- Previous period (same duration, ending the day before dateFrom) ---
+  const fromDate = new Date(dateFrom + "T00:00:00")
+  const toDate = new Date(dateTo + "T00:00:00")
+  const periodDays = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+  const prevTo = new Date(fromDate)
+  prevTo.setDate(prevTo.getDate() - 1)
+  const prevFrom = new Date(prevTo)
+  prevFrom.setDate(prevFrom.getDate() - periodDays + 1)
+  const prevFromStr = format(prevFrom, "yyyy-MM-dd")
+  const prevToStr = format(prevTo, "yyyy-MM-dd")
+
+  const [{ count: prevTotalShifts }, { count: prevConfirmedShifts }] = await Promise.all([
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", prevFromStr)
+      .lte("shift_date", prevToStr),
+    adminSupabase
+      .from("shifts")
+      .select("*", { count: "exact", head: true })
+      .gte("shift_date", prevFromStr)
+      .lte("shift_date", prevToStr)
+      .eq("status", "confirmed"),
+  ])
+
+  // --- Weekly breakdown: 7 days ending on dateTo ---
+  //   We fetch just shift_date + status for the last 7 days (small dataset)
+  const weekStart = new Date(toDate)
+  weekStart.setDate(weekStart.getDate() - 6)
+  const weekStartStr = format(weekStart, "yyyy-MM-dd")
+
+  const { data: weekShifts } = await adminSupabase
+    .from("shifts")
+    .select("shift_date, status")
+    .gte("shift_date", weekStartStr)
+    .lte("shift_date", dateTo)
+
+  // Build 7-day array
+  const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+  const weeklyBreakdown = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i)
+    const dateStr = format(d, "yyyy-MM-dd")
+    const dayShifts = (weekShifts ?? []).filter((s) => s.shift_date === dateStr)
+    return {
+      date: dateStr,
+      label: `${DAY_LABELS[d.getDay()]} ${d.getDate()}`,
+      total: dayShifts.length,
+      confirmed: dayShifts.filter((s) => s.status === "confirmed").length,
+      pending: dayShifts.filter((s) => ["new", "free_pending"].includes(s.status)).length,
+    }
+  })
+
+  return {
+    totalShifts: totalShifts ?? 0,
+    confirmedShifts: confirmedShifts ?? 0,
+    pendingShifts: pendingShifts ?? 0,
+    freeShifts: freeShifts ?? 0,
+    byArea: {
+      consultorio: areaConsultorio ?? 0,
+      internacion: areaInternacion ?? 0,
+      refuerzo: areaRefuerzo ?? 0,
+      piso: areaPiso ?? 0,
+    },
+    weeklyBreakdown,
+    prevTotalShifts: prevTotalShifts ?? 0,
+    prevConfirmedShifts: prevConfirmedShifts ?? 0,
+    totalDoctors: totalDoctors ?? 0,
+  }
 }

@@ -1,35 +1,43 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts } from "@/lib/actions/shifts"
+import { getShifts, getDashboardStats } from "@/lib/actions/shifts"
 import { getDoctors } from "@/lib/actions/doctors"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Users, Clock, CheckCircle2 } from "lucide-react"
 import { CreateShiftDialog } from "@/components/admin/create-shift-dialog"
+import { AdminShiftsList } from "@/components/admin/admin-shifts-list"
+import { AdminDashboardStats } from "@/components/admin/admin-dashboard-stats"
+import { format, startOfMonth, endOfMonth } from "date-fns"
 import type { Doctor } from "@/lib/supabase/types"
 
-import { AdminShiftsList } from "@/components/admin/admin-shifts-list"
+interface AdminPageProps {
+  searchParams: Promise<{ from?: string; to?: string }>
+}
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: AdminPageProps) {
   const currentDoctor = await getCurrentDoctor()
 
-  // Redirect if not authenticated or not admin
-  if (!currentDoctor) {
-    redirect("/login")
-  }
+  if (!currentDoctor) redirect("/login")
+  if (currentDoctor.role !== "administrator") redirect("/dashboard")
 
-  if (currentDoctor.role !== "administrator") {
-    redirect("/dashboard")
-  }
+  // Resolve period from searchParams (default: current month)
+  const params = await searchParams
+  const today = new Date()
+  const dateFrom = params.from ?? format(startOfMonth(today), "yyyy-MM-dd")
+  const dateTo = params.to ?? format(endOfMonth(today), "yyyy-MM-dd")
 
-  // Fetch all data in parallel
-  const [shifts, doctors] = await Promise.all([getShifts(), getDoctors()])
+  // Fetch in parallel: targeted stats (no 1000-row limit) + doctors + shifts list
+  const [stats, doctors, shifts] = await Promise.all([
+    getDashboardStats(dateFrom, dateTo),
+    getDoctors(),
+    getShifts(),  // used only for the list below (up to 1000 most recent, which is fine for browsing)
+  ])
 
-  const pendingShifts = shifts.filter((s) => s.status === "new" || s.status === "free").length
-  const confirmedShifts = shifts.filter((s) => s.status === "confirmed").length
+  // All-time total via a separate fast COUNT (already embedded in getDashboardStats with a broad range,
+  // but we pass a wide range to get the true all-time figure)
+  const allTimeStats = await getDashboardStats("2000-01-01", format(today, "yyyy-MM-dd"))
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Floating Action Button for Mobile */}
+      {/* FAB for mobile */}
       <div className="fixed bottom-6 right-6 z-40 lg:hidden">
         <CreateShiftDialog doctors={doctors} variant="fab" />
       </div>
@@ -41,76 +49,24 @@ export default async function AdminPage() {
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel de Administración</h1>
             <p className="text-slate-500 font-medium">Gestión integral de guardias y personal médico</p>
           </div>
-          {/* Desktop Create Button */}
           <div className="hidden lg:block">
             <CreateShiftDialog doctors={doctors} />
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="relative overflow-hidden border-none shadow-md group">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Guardias</CardTitle>
-              <div className="p-2 bg-blue-50 rounded-xl">
-                <Calendar className="h-5 w-5 text-blue-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-slate-900">{shifts.length}</div>
-              <p className="text-xs font-semibold text-blue-600/70 mt-1">Registradas en el sistema</p>
-            </CardContent>
-          </Card>
+        {/* New Analytics Dashboard */}
+        <AdminDashboardStats
+          stats={stats}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          totalAllTime={allTimeStats.totalShifts}
+        />
 
-          <Card className="relative overflow-hidden border-none shadow-md group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Pendientes</CardTitle>
-              <div className="p-2 bg-amber-50 rounded-xl">
-                <Clock className="h-5 w-5 text-amber-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-slate-900">{pendingShifts}</div>
-              <p className="text-xs font-semibold text-amber-600/70 mt-1">Requieren confirmación</p>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-none shadow-md group">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Confirmadas</CardTitle>
-              <div className="p-2 bg-green-50 rounded-xl">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-slate-900">{confirmedShifts}</div>
-              <p className="text-xs font-semibold text-green-600/70 mt-1">Listas para ejecución</p>
-            </CardContent>
-          </Card>
-
-          <Card className="relative overflow-hidden border-none shadow-md group">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Médicos</CardTitle>
-              <div className="p-2 bg-indigo-50 rounded-xl">
-                <Users className="h-5 w-5 text-indigo-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-slate-900">{doctors.length}</div>
-              <p className="text-xs font-semibold text-indigo-600/70 mt-1">Personal capacitado</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Shifts List Section */}
+        {/* Shifts List */}
         <div className="space-y-4">
-          <AdminShiftsList shifts={shifts} doctors={doctors} currentDoctor={currentDoctor} />
+          <AdminShiftsList shifts={shifts} doctors={doctors} currentDoctor={currentDoctor as Doctor} />
         </div>
-      </main >
-    </div >
+      </main>
+    </div>
   )
 }

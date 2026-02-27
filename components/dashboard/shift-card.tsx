@@ -126,6 +126,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
     consultorio: "bg-blue-50 text-blue-700 border-blue-200",
     internacion: "bg-emerald-50 text-emerald-700 border-emerald-200",
     refuerzo: "bg-orange-50 text-orange-700 border-orange-200",
+    piso: "bg-indigo-50 text-indigo-700 border-indigo-200",
   }
 
   const formatDate = (dateStr: string) => {
@@ -194,7 +195,9 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
                 ? "Consultorio"
                 : shift.shift_area === "internacion"
                   ? "Internación"
-                  : "Refuerzo"}
+                  : shift.shift_area === "piso"
+                    ? "Piso"
+                    : "Refuerzo"}
             </Badge>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600">
