@@ -359,6 +359,7 @@ function formatArea(area: string): string {
         consultorio: "Consultorio",
         internacion: "Internación",
         refuerzo: "Refuerzo",
+        piso: "Piso",
         completo: "Consultorio",
     }
     return areaMap[area] || area

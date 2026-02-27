@@ -1,9 +1,14 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShiftsForHonorarios, getDoctorsForHonorarios } from "@/lib/actions/shifts"
+import { getShiftsByDateRange, getDoctorsForHonorarios } from "@/lib/actions/shifts"
 import { ReportsGenerator } from "@/components/honorarios/reports-generator"
+import { format, startOfMonth, endOfMonth } from "date-fns"
 
-export default async function ReportsPage() {
+interface ReportsPageProps {
+    searchParams: Promise<{ from?: string; to?: string }>
+}
+
+export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     const currentDoctor = await getCurrentDoctor()
 
     // Redirect if not authenticated or not honorarios
@@ -15,8 +20,16 @@ export default async function ReportsPage() {
         redirect(currentDoctor.role === "administrator" ? "/admin" : "/dashboard")
     }
 
-    // Fetch all data using bypassing actions for honorarios role
-    const [shifts, doctors] = await Promise.all([getShiftsForHonorarios(), getDoctorsForHonorarios()])
+    // Resolve dates from searchParams or default to current month
+    const params = await searchParams
+    const dateFrom = params.from || format(startOfMonth(new Date()), "yyyy-MM-dd")
+    const dateTo = params.to || format(endOfMonth(new Date()), "yyyy-MM-dd")
+
+    // Fetch data using the specific date range
+    const [shifts, doctors] = await Promise.all([
+        getShiftsByDateRange(dateFrom, dateTo),
+        getDoctorsForHonorarios()
+    ])
 
     return (
         <div className="min-h-screen bg-slate-50">

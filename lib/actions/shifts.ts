@@ -70,6 +70,27 @@ export async function getShiftsForHonorarios(): Promise<Shift[]> {
   return shifts as Shift[]
 }
 
+/**
+ * Range-based fetcher for doctors that respects RLS.
+ */
+export async function getDoctorShiftsByDateRange(dateFrom: string, dateTo: string): Promise<Shift[]> {
+  const supabase = await getSupabaseServerClient()
+
+  const { data: shifts, error } = await supabase
+    .from("shifts")
+    .select("*")
+    .gte("shift_date", dateFrom)
+    .lte("shift_date", dateTo)
+    .order("shift_date", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching doctor shifts by date range:", error)
+    return []
+  }
+
+  return shifts as Shift[]
+}
+
 export async function getShiftsByDoctor(doctorId: string): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
 

@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShiftsByDoctor, getShifts } from "@/lib/actions/shifts"
+import { getDoctorShiftsByDateRange } from "@/lib/actions/shifts"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { ShiftsList } from "@/components/dashboard/shifts-list"
 import { TodayShifts } from "@/components/dashboard/today-shifts"
 import { ShiftsCalendar } from "@/components/dashboard/shifts-calendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, List } from "lucide-react"
-import type { Doctor } from "@/lib/supabase/types"
+import type { Shift, Doctor } from "@/lib/supabase/types"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
 
 export default async function DashboardPage() {
   const currentDoctor = await getCurrentDoctor()
@@ -19,21 +20,27 @@ export default async function DashboardPage() {
   // TypeScript now knows currentDoctor is Doctor (not null) after the check above
   const doctor = currentDoctor as Doctor
 
-  // Fetch ALL shifts to determine visibility correctly (matching shifts page logic)
-  const allShifts = await getShifts()
+  // Calculate window for the current dashboard view (current month +/- 1)
+  const today = new Date()
+  const windowFrom = startOfWeek(startOfMonth(subMonths(today, 1)), { weekStartsOn: 0 })
+  const windowTo = endOfWeek(endOfMonth(addMonths(today, 1)), { weekStartsOn: 0 })
 
-  // Filter shifts for role-based visibility
-  // 1. Admin sees everything
-  // 2. Doctors see:
-  //    a. Their own assigned shifts
-  //    b. Free shifts (all doctors can see and accept free shifts)
+  const dateFrom = format(windowFrom, "yyyy-MM-dd")
+  const dateTo = format(windowTo, "yyyy-MM-dd")
+
+  // Fetch shifts for the range
+  const fetchedShifts = await getDoctorShiftsByDateRange(dateFrom, dateTo)
+
+  // Filter shifts for privacy:
+  // 1. Own assigned shifts
+  // 2. Free shifts (available for anyone to take)
   const visibleShifts = doctor.role === "administrator"
-    ? allShifts
-    : allShifts.filter((s) => {
+    ? fetchedShifts
+    : fetchedShifts.filter((s: Shift) => {
       // Own shifts
       if (s.doctor_id === doctor.id) return true
 
-      // Free shifts - all doctors can see them
+      // Free shifts
       if (s.shift_type === "free" || s.status === "free" || s.status === "free_pending") {
         return true
       }

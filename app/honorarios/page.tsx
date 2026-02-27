@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts } from "@/lib/actions/shifts"
-import { getDoctors } from "@/lib/actions/doctors"
+import { getShiftsByDateRange, getDoctorsForHonorarios } from "@/lib/actions/shifts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, Clock, CheckCircle2 } from "lucide-react"
-import type { Doctor } from "@/lib/supabase/types"
+import type { Shift, Doctor } from "@/lib/supabase/types"
 import { HonorariosShiftsList } from "@/components/honorarios/honorarios-shifts-list"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
 
 export default async function HonorariosPage() {
     const currentDoctor = await getCurrentDoctor()
@@ -19,11 +19,19 @@ export default async function HonorariosPage() {
         redirect(currentDoctor.role === "administrator" ? "/admin" : "/dashboard")
     }
 
-    // Fetch all data in parallel
-    const [shifts, doctors] = await Promise.all([getShifts(), getDoctors()])
+    // Calculate window for the current dashboard view (current month +/- 1)
+    const today = new Date()
+    const windowFrom = startOfWeek(startOfMonth(subMonths(today, 1)), { weekStartsOn: 0 })
+    const windowTo = endOfWeek(endOfMonth(addMonths(today, 1)), { weekStartsOn: 0 })
 
-    const pendingShifts = shifts.filter((s) => s.status === "new" || s.status === "free").length
-    const confirmedShifts = shifts.filter((s) => s.status === "confirmed").length
+    // Fetch data using the same pattern as calendar for accuracy
+    const [shifts, doctors] = await Promise.all([
+        getShiftsByDateRange(format(windowFrom, "yyyy-MM-dd"), format(windowTo, "yyyy-MM-dd")),
+        getDoctorsForHonorarios()
+    ])
+
+    const pendingShifts = shifts.filter((s: Shift) => s.status === "new" || s.status === "free").length
+    const confirmedShifts = shifts.filter((s: Shift) => s.status === "confirmed").length
 
     return (
         <div className="min-h-screen bg-slate-50">

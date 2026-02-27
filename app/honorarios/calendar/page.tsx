@@ -1,11 +1,16 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts } from "@/lib/actions/shifts"
-import { getDoctors } from "@/lib/actions/doctors"
-import { ShiftsCalendar } from "@/components/dashboard/shifts-calendar"
+import { getShiftsByDateRange, getDoctorsForHonorarios } from "@/lib/actions/shifts"
+import { HonorariosCalendar } from "@/components/honorarios/honorarios-calendar"
 import { Calendar } from "lucide-react"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
+import type { Doctor } from "@/lib/supabase/types"
 
-export default async function HonorariosCalendarPage() {
+interface HonorariosCalendarPageProps {
+    searchParams: Promise<{ year?: string; month?: string }>
+}
+
+export default async function HonorariosCalendarPage({ searchParams }: HonorariosCalendarPageProps) {
     const currentDoctor = await getCurrentDoctor()
 
     if (!currentDoctor) {
@@ -16,7 +21,26 @@ export default async function HonorariosCalendarPage() {
         redirect(currentDoctor.role === "administrator" ? "/admin" : "/dashboard")
     }
 
-    const [shifts, doctors] = await Promise.all([getShifts(), getDoctors()])
+    // Resolve month/year from searchParams (default: current month)
+    const params = await searchParams
+    const today = new Date()
+    const year = params.year ? parseInt(params.year) : today.getFullYear()
+    const month = params.month ? parseInt(params.month) : today.getMonth() // 0-indexed
+
+    // Build the target month date
+    const targetMonth = new Date(year, month, 1)
+
+    // Include prev/next month padding so calendar weeks that span month boundaries work correctly.
+    const windowFrom = startOfWeek(startOfMonth(subMonths(targetMonth, 1)), { weekStartsOn: 0 })
+    const windowTo = endOfWeek(endOfMonth(addMonths(targetMonth, 1)), { weekStartsOn: 0 })
+
+    const dateFrom = format(windowFrom, "yyyy-MM-dd")
+    const dateTo = format(windowTo, "yyyy-MM-dd")
+
+    const [shifts, doctors] = await Promise.all([
+        getShiftsByDateRange(dateFrom, dateTo),
+        getDoctorsForHonorarios()
+    ])
 
     return (
         <div className="min-h-screen bg-slate-50 pt-20 lg:pt-8 px-4 pb-8">
@@ -34,7 +58,13 @@ export default async function HonorariosCalendarPage() {
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-slate-200/60 overflow-hidden">
-                    <ShiftsCalendar shifts={shifts} doctors={doctors} readOnly={true} />
+                    <HonorariosCalendar
+                        shifts={shifts}
+                        doctors={doctors}
+                        currentDoctor={currentDoctor as Doctor}
+                        initialYear={year}
+                        initialMonth={month}
+                    />
                 </div>
             </div>
         </div>

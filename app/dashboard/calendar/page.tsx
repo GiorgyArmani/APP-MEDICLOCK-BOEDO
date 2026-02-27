@@ -1,31 +1,50 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts } from "@/lib/actions/shifts"
-import { ShiftsCalendar } from "@/components/dashboard/shifts-calendar"
+import { getDoctorShiftsByDateRange } from "@/lib/actions/shifts"
+import { DoctorCalendar } from "@/components/dashboard/doctor-calendar"
 import { Calendar } from "lucide-react"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
+import type { Shift, Doctor } from "@/lib/supabase/types"
 
-export default async function DoctorCalendarPage() {
-    const doctor = await getCurrentDoctor()
+interface DoctorCalendarPageProps {
+    searchParams: Promise<{ year?: string; month?: string }>
+}
 
-    if (!doctor) {
+export default async function DoctorCalendarPage({ searchParams }: DoctorCalendarPageProps) {
+    const currentDoctor = await getCurrentDoctor()
+
+    if (!currentDoctor) {
         redirect("/login")
     }
 
-    // Filter shifts for role-based visibility (same logic as in dashboard)
-    const allShifts = await getShifts()
+    // Resolve month/year from searchParams (default: current month)
+    const params = await searchParams
+    const today = new Date()
+    const year = params.year ? parseInt(params.year) : today.getFullYear()
+    const month = params.month ? parseInt(params.month) : today.getMonth() // 0-indexed
 
-    // Filter shifts for role-based visibility
-    // 1. Admin sees everything
-    // 2. Doctors see:
-    //    a. Their own assigned shifts
-    //    b. Free shifts (all doctors can see and accept free shifts)
-    const visibleShifts = doctor.role === "administrator"
-        ? allShifts
-        : allShifts.filter((s) => {
+    // Build the target month date
+    const targetMonth = new Date(year, month, 1)
+
+    // Include prev/next month padding so calendar weeks that span month boundaries work correctly.
+    const windowFrom = startOfWeek(startOfMonth(subMonths(targetMonth, 1)), { weekStartsOn: 0 })
+    const windowTo = endOfWeek(endOfMonth(addMonths(targetMonth, 1)), { weekStartsOn: 0 })
+
+    const dateFrom = format(windowFrom, "yyyy-MM-dd")
+    const dateTo = format(windowTo, "yyyy-MM-dd")
+
+    const fetchedShifts = await getDoctorShiftsByDateRange(dateFrom, dateTo)
+
+    // Filter shifts for privacy:
+    // 1. Own assigned shifts
+    // 2. Free shifts
+    const visibleShifts = currentDoctor.role === "administrator"
+        ? fetchedShifts
+        : fetchedShifts.filter((s: Shift) => {
             // Own shifts
-            if (s.doctor_id === doctor.id) return true
+            if (s.doctor_id === currentDoctor.id) return true
 
-            // Free shifts - all doctors can see them
+            // Free shifts
             if (s.shift_type === "free" || s.status === "free" || s.status === "free_pending") {
                 return true
             }
@@ -46,7 +65,12 @@ export default async function DoctorCalendarPage() {
                     </div>
                 </div>
 
-                <ShiftsCalendar shifts={visibleShifts} />
+                <DoctorCalendar
+                    shifts={visibleShifts}
+                    currentDoctor={currentDoctor as Doctor}
+                    initialYear={year}
+                    initialMonth={month}
+                />
             </div>
         </div>
     )

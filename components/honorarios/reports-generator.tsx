@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import type { Shift, Doctor } from "@/lib/supabase/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -25,7 +26,6 @@ import { es } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { useEffect } from "react"
 
 interface ReportsGeneratorProps {
     shifts: Shift[]
@@ -33,14 +33,48 @@ interface ReportsGeneratorProps {
 }
 
 export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+
     const [isMounted, setIsMounted] = useState(false)
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("all")
     const [selectedArea, setSelectedArea] = useState<string>("all")
     const [selectedTurn, setSelectedTurn] = useState<string>("all")
     const [selectedDayType, setSelectedDayType] = useState<string>("all")
     const [reportType, setReportType] = useState<"detailed" | "summary">("detailed")
-    const [dateFrom, setDateFrom] = useState<Date | undefined>(startOfMonth(new Date()))
-    const [dateTo, setDateTo] = useState<Date | undefined>(endOfMonth(new Date()))
+
+    // Initialize dates from searchParams if available
+    const urlFrom = searchParams.get("from")
+    const urlTo = searchParams.get("to")
+
+    const [dateFrom, setDateFrom] = useState<Date | undefined>(
+        urlFrom ? new Date(urlFrom + "T12:00:00") : startOfMonth(new Date())
+    )
+    const [dateTo, setDateTo] = useState<Date | undefined>(
+        urlTo ? new Date(urlTo + "T12:00:00") : endOfMonth(new Date())
+    )
+
+    // Update URL when dates change
+    const updateUrlDates = (from: Date | undefined, to: Date | undefined) => {
+        const params = new URLSearchParams(searchParams.toString())
+        if (from) params.set("from", format(from, "yyyy-MM-dd"))
+        else params.delete("from")
+
+        if (to) params.set("to", format(to, "yyyy-MM-dd"))
+        else params.delete("to")
+
+        router.push(`/honorarios/reports?${params.toString()}`)
+    }
+
+    const handleSetDateFrom = (date: Date | undefined) => {
+        setDateFrom(date)
+        updateUrlDates(date, dateTo)
+    }
+
+    const handleSetDateTo = (date: Date | undefined) => {
+        setDateTo(date)
+        updateUrlDates(dateFrom, date)
+    }
 
     useEffect(() => {
         setIsMounted(true)
@@ -125,14 +159,20 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
     }
 
     const setThisMonth = () => {
-        setDateFrom(startOfMonth(new Date()))
-        setDateTo(endOfMonth(new Date()))
+        const from = startOfMonth(new Date())
+        const to = endOfMonth(new Date())
+        setDateFrom(from)
+        setDateTo(to)
+        updateUrlDates(from, to)
     }
 
     const setLastMonth = () => {
         const lastMonth = subMonths(new Date(), 1)
-        setDateFrom(startOfMonth(lastMonth))
-        setDateTo(endOfMonth(lastMonth))
+        const from = startOfMonth(lastMonth)
+        const to = endOfMonth(lastMonth)
+        setDateFrom(from)
+        setDateTo(to)
+        updateUrlDates(from, to)
     }
 
     if (!isMounted) return <div className="h-[400px] w-full bg-slate-50/50 rounded-xl border border-slate-200/60 animate-pulse" />
@@ -175,7 +215,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                                     <Calendar
                                         mode="single"
                                         selected={dateFrom}
-                                        onSelect={setDateFrom}
+                                        onSelect={handleSetDateFrom}
                                         initialFocus
                                     />
                                 </PopoverContent>
@@ -200,7 +240,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                                     <Calendar
                                         mode="single"
                                         selected={dateTo}
-                                        onSelect={setDateTo}
+                                        onSelect={handleSetDateTo}
                                         initialFocus
                                     />
                                 </PopoverContent>
@@ -257,6 +297,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                                 <SelectItem value="consultorio">Consultorio</SelectItem>
                                 <SelectItem value="internacion">Internación</SelectItem>
                                 <SelectItem value="refuerzo">Refuerzo</SelectItem>
+                                <SelectItem value="piso">Piso</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

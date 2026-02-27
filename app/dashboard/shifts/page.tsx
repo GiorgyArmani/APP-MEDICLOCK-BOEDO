@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts } from "@/lib/actions/shifts"
+import { getDoctorShiftsByDateRange } from "@/lib/actions/shifts"
 import { ShiftsList } from "@/components/dashboard/shifts-list"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
+import type { Shift } from "@/lib/supabase/types"
 
 export default async function ShiftsPage() {
     const doctor = await getCurrentDoctor()
@@ -12,14 +14,21 @@ export default async function ShiftsPage() {
         redirect("/login")
     }
 
-    // Get ALL shifts to show free shifts to everyone
-    const allShifts = await getShifts()
+    // Get a wider window for the list view (e.g. +/- 3 months)
+    const today = new Date()
+    const windowFrom = subMonths(startOfMonth(today), 3)
+    const windowTo = addMonths(endOfMonth(today), 3)
+
+    const dateFrom = format(windowFrom, "yyyy-MM-dd")
+    const dateTo = format(windowTo, "yyyy-MM-dd")
+
+    const visibleShifts = await getDoctorShiftsByDateRange(dateFrom, dateTo)
 
     // Filter to show assigned shifts and free shifts
-    const myShifts = allShifts.filter((s) => s.doctor_id === doctor.id)
+    const myShifts = visibleShifts.filter((s: Shift) => s.doctor_id === doctor.id)
 
-    // Filter accessible free shifts - all doctors can see and accept free shifts
-    const freeShifts = allShifts.filter((s) =>
+    // Filter accessible free shifts
+    const freeShifts = visibleShifts.filter((s: Shift) =>
         s.shift_type === "free" || s.status === "free" || s.status === "free_pending"
     )
 
