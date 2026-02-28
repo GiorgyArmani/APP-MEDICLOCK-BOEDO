@@ -83,43 +83,44 @@ export function AvailabilityCalendar({ doctorId, availability }: AvailabilityCal
                     return (
                         <div
                             key={day.value}
-                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors"
+                            className="flex items-center justify-between p-6 border border-slate-100 rounded-2xl bg-white hover:shadow-lg hover:shadow-slate-200/20 transition-all duration-300 group"
                         >
                             <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <Clock className="h-5 w-5 text-slate-400" />
-                                    <span className="font-medium">{day.label}</span>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                                        <Clock className="h-5 w-5" />
+                                    </div>
+                                    <span className="font-black text-slate-800 tracking-tight text-lg">{day.label}</span>
                                 </div>
                                 {dayAvailability.length > 0 ? (
-                                    <div className="ml-8 space-y-2">
+                                    <div className="ml-14 space-y-3">
                                         {dayAvailability.map((slot) => (
-                                            <div key={slot.id} className="flex items-center gap-2">
-                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                                    {slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}
+                                            <div key={slot.id} className="flex items-center gap-3">
+                                                <Badge variant="outline" className="bg-emerald-50/50 text-emerald-700 border-emerald-100 px-3 py-1 font-bold text-[11px] rounded-lg">
+                                                    {slot.start_time.substring(0, 5)} — {slot.end_time.substring(0, 5)}
                                                 </Badge>
                                                 {slot.notes && (
-                                                    <span className="text-sm text-slate-600">({slot.notes})</span>
+                                                    <span className="text-[11px] font-medium text-slate-400 italic">“{slot.notes}”</span>
                                                 )}
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDelete(slot.id)}
-                                                    className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    className="h-8 w-8 p-0 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="ml-8 text-sm text-slate-500">No disponible</p>
+                                    <p className="ml-14 text-xs font-bold text-slate-300 uppercase tracking-widest">Sin disponibilidad configurada</p>
                                 )}
                             </div>
                             <Button
                                 variant="outline"
-                                size="sm"
                                 onClick={() => handleDayClick(day.value)}
-                                className="gap-2"
+                                className="gap-2 bg-slate-50 border-slate-200 rounded-xl font-black text-[10px] uppercase tracking-widest h-10 px-5 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
                             >
                                 <Plus className="h-4 w-4" />
                                 Agregar

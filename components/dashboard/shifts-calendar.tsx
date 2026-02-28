@@ -84,7 +84,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
 
   return (
     <>
-      <Card className="shadow-lg min-h-[700px] flex flex-col">
+      <Card className="shadow-2xl shadow-slate-200/40 border-slate-200/60 sm:rounded-3xl min-h-[600px] sm:min-h-[850px] flex flex-col overflow-hidden bg-white">
         {/* Header Controller */}
         <CalendarHeader
           date={currentDate}
@@ -108,41 +108,43 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
         />
 
 
-        <CardContent className="pt-6 flex-1 space-y-6">
+        <CardContent className="p-3 pt-6 sm:p-8 flex-1 space-y-6 sm:space-y-8">
           {/* Admin Filters Row */}
           {props.doctors && (
-            <ShiftsFilter
-              doctors={props.doctors}
-              filterDoctorId={filterDoctorId}
-              setFilterDoctorId={setFilterDoctorId}
-              filterArea={filterArea}
-              setFilterArea={setFilterArea}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              onClear={clearFilters}
-            />
+            <div className="bg-slate-50/30 p-1 rounded-2xl border border-slate-100/50">
+              <ShiftsFilter
+                doctors={props.doctors}
+                filterDoctorId={filterDoctorId}
+                setFilterDoctorId={setFilterDoctorId}
+                filterArea={filterArea}
+                setFilterArea={setFilterArea}
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
+                onClear={clearFilters}
+              />
+            </div>
           )}
 
           {/* View Legend */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 lg:w-fit">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Estado</span>
-              <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm lg:w-fit flex-1 sm:flex-none">
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">Área de Trabajo</span>
+              <div className="flex flex-wrap gap-3 sm:gap-5">
+                <StatusBadge color="bg-purple-500" label="Consultorio" dot={false} bar={true} />
+                <StatusBadge color="bg-blue-500" label="Internación" dot={false} bar={true} />
+                <StatusBadge color="bg-orange-500" label="Refuerzo" dot={false} bar={true} />
+                <StatusBadge color="bg-indigo-500" label="Piso" dot={false} bar={true} />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm lg:w-fit flex-1 sm:flex-none">
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">Estado de Guardia</span>
+              <div className="flex flex-wrap gap-3 sm:gap-5">
                 <StatusBadge color="bg-blue-400" label="Nueva" />
                 <StatusBadge color="bg-amber-400" label="Libre" />
                 <StatusBadge color="bg-emerald-400" label="Confirmada" />
                 <StatusBadge color="bg-rose-400" label="Rechazada" />
                 <StatusBadge color="bg-orange-400" label="Pendiente +12h" />
-              </div>
-            </div>
-
-            <div className="bg-slate-50/50 rounded-lg p-3 border border-slate-100 lg:w-fit">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Área</span>
-              <div className="flex flex-wrap gap-4">
-                <StatusBadge color="bg-purple-600" label="Consultorio" />
-                <StatusBadge color="bg-blue-600" label="Internación" />
-                <StatusBadge color="bg-orange-600" label="Refuerzo" />
-                <StatusBadge color="bg-indigo-600" label="Piso" />
               </div>
             </div>
           </div>
@@ -153,6 +155,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
               currentDate={currentDate}
               shifts={filteredShifts}
               onDayClick={handleDayClick}
+              doctors={props.doctors}
             />
           )}
 
@@ -162,6 +165,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
               shifts={filteredShifts}
               onDayClick={handleWeekDayClick}
               onShiftClick={handleShiftClick}
+              doctors={props.doctors}
             />
           )}
 
@@ -170,6 +174,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
               currentDate={currentDate}
               shifts={filteredShifts}
               onShiftClick={handleShiftClick}
+              doctors={props.doctors}
             />
           )}
 
@@ -211,11 +216,12 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
   )
 }
 
-function StatusBadge({ color, label }: { color: string; label: string }) {
+function StatusBadge({ color, label, dot = true, bar = false }: { color: string; label: string; dot?: boolean; bar?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className={`w-3 h-3 rounded ${color} shadow-sm`} />
-      <span className="text-xs font-medium text-slate-700">{label}</span>
+    <div className="flex items-center gap-3 group cursor-default">
+      {dot && <div className={`w-2.5 h-2.5 rounded-full ${color} shadow-sm ring-4 ring-transparent group-hover:ring-slate-50 transition-all`} />}
+      {bar && <div className={`w-1.5 h-4 rounded-full ${color} shadow-sm`} />}
+      <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 transition-colors uppercase tracking-tight">{label}</span>
     </div>
   )
 }

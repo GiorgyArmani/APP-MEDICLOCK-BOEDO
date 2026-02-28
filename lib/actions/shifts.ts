@@ -15,7 +15,7 @@ import { format, parseISO } from "date-fns"
 export async function getShifts(): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
 
-  const { data: shifts, error } = await supabase.from("shifts").select("*").order("shift_date", { ascending: true })
+  const { data: shifts, error } = await supabase.from("shifts").select("*").order("shift_date", { ascending: false })
 
   if (error) {
     console.error("Error fetching shifts:", error)
@@ -39,7 +39,7 @@ export async function getShiftsByDateRange(dateFrom: string, dateTo: string): Pr
     .select("*")
     .gte("shift_date", dateFrom)
     .lte("shift_date", dateTo)
-    .order("shift_date", { ascending: true })
+    .order("shift_date", { ascending: false })
 
   if (error) {
     console.error("Error fetching shifts by date range:", error)

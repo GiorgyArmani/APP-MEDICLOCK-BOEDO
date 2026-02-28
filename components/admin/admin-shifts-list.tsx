@@ -23,9 +23,9 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
     return matchesDoctor && matchesArea
   })
 
-  const newShifts = filteredShifts.filter((s) => s.status === "new")
-  const freeShifts = filteredShifts.filter((s) => s.status === "free" || s.status === "free_pending")
   const confirmedShifts = filteredShifts.filter((s) => s.status === "confirmed")
+  const pendingShifts = filteredShifts.filter((s) => s.status === "new" || s.status === "free_pending")
+  const freeShifts = filteredShifts.filter((s) => s.status === "free")
 
   const clearFilters = () => {
     setFilterDoctorId("all")
@@ -47,7 +47,7 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
         <CardHeader className="bg-white border-b border-slate-100">
           <div className="flex flex-col gap-1">
             <CardTitle className="text-xl font-bold text-slate-900">Todas las Guardias</CardTitle>
-            <CardDescription>Vista completa de todas las guardias del sistema</CardDescription>
+            <CardDescription>Mostrando turnos del periodo seleccionado</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
@@ -55,9 +55,9 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
             <div className="px-4 pt-4 sm:px-0 sm:pt-0">
               <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-slate-100/50 p-1 rounded-lg">
                 <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Todas ({filteredShifts.length})</TabsTrigger>
-                <TabsTrigger value="new" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Nuevas ({newShifts.length})</TabsTrigger>
-                <TabsTrigger value="free" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Libres ({freeShifts.length})</TabsTrigger>
                 <TabsTrigger value="confirmed" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Confirmadas ({confirmedShifts.length})</TabsTrigger>
+                <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Pendientes ({pendingShifts.length})</TabsTrigger>
+                <TabsTrigger value="free" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Libres ({freeShifts.length})</TabsTrigger>
               </TabsList>
             </div>
 
@@ -69,11 +69,19 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
               )}
             </TabsContent>
 
-            <TabsContent value="new" className="space-y-4 mt-6 px-4 pb-6 sm:px-0 sm:pb-0">
-              {newShifts.length === 0 ? (
-                <p className="text-center text-slate-500 py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No hay guardias nuevas con estos filtros</p>
+            <TabsContent value="confirmed" className="space-y-4 mt-6 px-4 pb-6 sm:px-0 sm:pb-0">
+              {confirmedShifts.length === 0 ? (
+                <p className="text-center text-slate-500 py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No hay guardias confirmadas con estos filtros</p>
               ) : (
-                newShifts.map((shift) => <AdminShiftCard key={shift.id} shift={shift} doctors={doctors} currentDoctor={currentDoctor} />)
+                confirmedShifts.map((shift) => <AdminShiftCard key={shift.id} shift={shift} doctors={doctors} currentDoctor={currentDoctor} />)
+              )}
+            </TabsContent>
+
+            <TabsContent value="pending" className="space-y-4 mt-6 px-4 pb-6 sm:px-0 sm:pb-0">
+              {pendingShifts.length === 0 ? (
+                <p className="text-center text-slate-500 py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No hay guardias pendientes con estos filtros</p>
+              ) : (
+                pendingShifts.map((shift) => <AdminShiftCard key={shift.id} shift={shift} doctors={doctors} currentDoctor={currentDoctor} />)
               )}
             </TabsContent>
 
@@ -82,14 +90,6 @@ export function AdminShiftsList({ shifts, doctors, currentDoctor }: AdminShiftsL
                 <p className="text-center text-slate-500 py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No hay guardias libres con estos filtros</p>
               ) : (
                 freeShifts.map((shift) => <AdminShiftCard key={shift.id} shift={shift} doctors={doctors} currentDoctor={currentDoctor} />)
-              )}
-            </TabsContent>
-
-            <TabsContent value="confirmed" className="space-y-4 mt-6 px-4 pb-6 sm:px-0 sm:pb-0">
-              {confirmedShifts.length === 0 ? (
-                <p className="text-center text-slate-500 py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">No hay guardias confirmadas con estos filtros</p>
-              ) : (
-                confirmedShifts.map((shift) => <AdminShiftCard key={shift.id} shift={shift} doctors={doctors} currentDoctor={currentDoctor} />)
               )}
             </TabsContent>
           </Tabs>

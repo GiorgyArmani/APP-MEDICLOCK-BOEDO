@@ -54,33 +54,37 @@ export function CalendarHeader({ date, view, onViewChange, onDateChange, onToday
     }
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b bg-white">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-                <h2 className="text-xl font-bold capitalize text-slate-800 min-w-[200px]">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 p-4 sm:p-6 border-b border-slate-100 bg-white">
+            <div className="flex flex-col items-center sm:items-start gap-1 w-full sm:w-auto">
+                <div className="flex items-center gap-2 text-blue-600 mb-0.5 sm:mb-1">
+                    <CalendarIcon className="h-4 w-4 hidden sm:block" />
+                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em]">Gestión de Guardias</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black capitalize text-slate-800 tracking-tight text-center sm:text-left">
                     {formatDate()}
                 </h2>
             </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                 <Select value={view} onValueChange={(v: "month" | "week" | "day") => onViewChange(v)}>
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[110px] bg-slate-50/50 border-slate-200 rounded-xl font-bold text-xs h-9">
                         <SelectValue placeholder="Vista" />
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="month">Mes</SelectItem>
-                        <SelectItem value="week">Semana</SelectItem>
-                        <SelectItem value="day">Día</SelectItem>
+                    <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                        <SelectItem value="month" className="text-xs font-bold">MES</SelectItem>
+                        <SelectItem value="week" className="text-xs font-bold">SEMANA</SelectItem>
+                        <SelectItem value="day" className="text-xs font-bold">DÍA</SelectItem>
                     </SelectContent>
                 </Select>
 
-                <div className="flex items-center border rounded-md bg-slate-50">
-                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:bg-slate-200">
+                <div className="flex items-center bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-8 w-8 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-600">
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" className="px-3 font-medium text-sm hover:bg-slate-200" onClick={onToday}>
+                    <Button variant="ghost" className="px-5 font-black text-[10px] uppercase tracking-widest hover:bg-white hover:shadow-sm rounded-lg h-8 transition-all text-slate-700" onClick={onToday}>
                         Hoy
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => navigate(1)} className="hover:bg-slate-200">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(1)} className="h-8 w-8 hover:bg-white hover:shadow-sm rounded-lg transition-all text-slate-600">
                         <ChevronRight className="h-4 w-4" />
                     </Button>
                 </div>

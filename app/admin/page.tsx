@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getCurrentDoctor } from "@/lib/actions/auth"
-import { getShifts, getDashboardStats } from "@/lib/actions/shifts"
+import { getShiftsByDateRange, getDashboardStats } from "@/lib/actions/shifts"
 import { getDoctors } from "@/lib/actions/doctors"
 import { CreateShiftDialog } from "@/components/admin/create-shift-dialog"
 import { AdminShiftsList } from "@/components/admin/admin-shifts-list"
@@ -28,7 +28,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const [stats, doctors, shifts] = await Promise.all([
     getDashboardStats(dateFrom, dateTo),
     getDoctors(),
-    getShifts(),  // used only for the list below (up to 1000 most recent, which is fine for browsing)
+    getShiftsByDateRange(dateFrom, dateTo),
   ])
 
   // All-time total via a separate fast COUNT (already embedded in getDashboardStats with a broad range,
