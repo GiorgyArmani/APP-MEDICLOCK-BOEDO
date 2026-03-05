@@ -1,11 +1,11 @@
 "use server"
 
-import { getSupabaseServerClient } from "@/lib/supabase/server"
+import { getSupabaseAdminClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import type { ChatMessage } from "@/lib/supabase/types"
 
 export async function getChatMessages(doctorId: string) {
-    const supabase = await getSupabaseServerClient()
+    const supabase = await getSupabaseAdminClient()
 
     const { data, error } = await supabase
         .from("chat_messages")
@@ -22,7 +22,7 @@ export async function getChatMessages(doctorId: string) {
 }
 
 export async function sendChatMessage(doctorId: string, senderId: string, content: string) {
-    const supabase = await getSupabaseServerClient()
+    const supabase = await getSupabaseAdminClient()
 
     const { data, error } = await supabase
         .from("chat_messages")
@@ -64,7 +64,7 @@ export async function sendChatMessage(doctorId: string, senderId: string, conten
 }
 
 export async function markChatAsRead(doctorId: string, currentUserId: string) {
-    const supabase = await getSupabaseServerClient()
+    const supabase = await getSupabaseAdminClient()
 
     // Mark as read all messages in this thread that were NOT sent by the current user
     const { error } = await supabase
@@ -83,7 +83,7 @@ export async function markChatAsRead(doctorId: string, currentUserId: string) {
 }
 
 export async function getDoctorsWithUnreadCount() {
-    const supabase = await getSupabaseServerClient()
+    const supabase = await getSupabaseAdminClient()
 
     // This is a bit complex in a single query with Supabase/PostgREST without a custom function
     // We'll fetch all doctors and then get unread counts

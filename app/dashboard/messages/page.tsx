@@ -24,7 +24,7 @@ export default async function DoctorMessagesPage() {
                 Utiliza este chat para comunicarte con la oficina de administración. Tus mensajes serán leídos por el personal administrativo de Mediclock.
             </p>
 
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto h-[calc(100dvh-16rem)] min-h-0 border rounded-xl overflow-hidden shadow-sm">
                 <ChatWindow
                     doctorId={currentDoctor.id}
                     currentUserId={currentDoctor.id}

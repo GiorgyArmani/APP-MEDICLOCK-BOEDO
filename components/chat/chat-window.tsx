@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { ChatMessage, Doctor } from "@/lib/supabase/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { Send, User as UserIcon, Loader2, ArrowLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { getChatMessages, sendChatMessage, markChatAsRead } from "@/lib/actions/chat"
@@ -65,7 +65,7 @@ export function ChatWindow({ doctorId, currentUserId, recipientName, isAdminView
         }
     }, [doctorId, currentUserId, supabase])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         scrollToBottom()
     }, [messages])
 
@@ -94,7 +94,7 @@ export function ChatWindow({ doctorId, currentUserId, recipientName, isAdminView
     return (
         <div className="flex flex-col h-full bg-white overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 text-white p-4 flex items-center gap-3">
+            <div className="bg-slate-900 text-white p-4 flex items-center gap-3 shrink-0">
                 {onBack && (
                     <Button
                         variant="ghost"
@@ -117,7 +117,7 @@ export function ChatWindow({ doctorId, currentUserId, recipientName, isAdminView
             </div>
 
             {/* Messages Area */}
-            <ScrollArea className="flex-1 p-4 bg-slate-50 min-h-0">
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50 min-h-0">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -164,7 +164,7 @@ export function ChatWindow({ doctorId, currentUserId, recipientName, isAdminView
                         <div ref={scrollRef} />
                     </div>
                 )}
-            </ScrollArea>
+            </div>
 
             {/* Input Area */}
             <form onSubmit={handleSendMessage} className="p-4 bg-white border-t flex gap-2">
