@@ -237,36 +237,57 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
 
         {shift.status === "confirmed" && isAssignedToMe && (
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-200">
-            {/* Clock In / Out Logic */}
-            {!shift.clock_in && (
-              // Simple logic: Allow clock in if confirmed. 
-              // Ideally check date, but backend does loose check. UI can be strict or loose.
-              // Let's simple check if it's today or generally allowed.
-              <Button
-                onClick={handleClockIn}
-                disabled={isPending}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Marcar Entrada (Check-In)
-              </Button>
-            )}
+            {(() => {
+              const today = new Date()
+              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+              const isToday = shift.shift_date === todayStr
 
-            {shift.clock_in && !shift.clock_out && (
-              <div className="space-y-2">
-                <div className="text-sm text-center text-emerald-700 font-medium bg-emerald-50 p-2 rounded">
-                  Entrada: {new Date(shift.clock_in).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-                <Button
-                  onClick={handleClockOut}
-                  disabled={isPending}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Marcar Salida (Check-Out)
-                </Button>
-              </div>
-            )}
+              if (!shift.clock_in) {
+                return (
+                  <div className="space-y-2">
+                    {!isToday && (
+                      <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Check-in disponible solo el día del turno
+                      </p>
+                    )}
+                    <Button
+                      onClick={handleClockIn}
+                      disabled={isPending || !isToday}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Marcar Entrada (Check-In)
+                    </Button>
+                  </div>
+                )
+              }
+
+              if (shift.clock_in && !shift.clock_out) {
+                return (
+                  <div className="space-y-2">
+                    {!isToday && (
+                      <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Check-out disponible solo el día del turno
+                      </p>
+                    )}
+                    <div className="text-sm text-center text-emerald-700 font-medium bg-emerald-50 p-2 rounded">
+                      Entrada: {new Date(shift.clock_in).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <Button
+                      onClick={handleClockOut}
+                      disabled={isPending || !isToday}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Marcar Salida (Check-Out)
+                    </Button>
+                  </div>
+                )
+              }
+              return null
+            })()}
 
             {shift.clock_in && shift.clock_out && (
               <div className="grid grid-cols-2 gap-2 text-sm text-center bg-slate-50 p-2 rounded">

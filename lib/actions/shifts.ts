@@ -11,6 +11,7 @@ import {
 } from "@/lib/notifications/email"
 import { notifyFreeShift } from "@/lib/notifications/in-app"
 import { format, parseISO } from "date-fns"
+import { shiftsOverlap } from "@/lib/utils"
 
 export async function getShifts(): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
@@ -143,6 +144,28 @@ export async function createShift(shiftData: CreateShiftParams) {
   } else {
     // Single shift
     shiftsToInsert.push(baseShiftData)
+  }
+
+  // VALIDATION: Problem 3 - Admin-Side Overlap Validation
+  // If assigning to a doctor, check for overlaps
+  if (baseShiftData.doctor_id) {
+    for (const shift of shiftsToInsert) {
+      const { data: existingShifts, error: overlapError } = await supabase
+        .from("shifts")
+        .select("id, shift_hours")
+        .eq("doctor_id", shift.doctor_id!)
+        .eq("shift_date", shift.shift_date)
+        .eq("status", "confirmed")
+
+      if (overlapError) {
+        console.error("Error checking overlaps:", overlapError)
+      } else if (existingShifts && existingShifts.length > 0) {
+        const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours!, shift.shift_hours!))
+        if (hasOverlap) {
+          return { error: `El médico ya tiene un turno asignado en el horario ${shift.shift_hours} el día ${shift.shift_date}.` }
+        }
+      }
+    }
   }
 
   const createdShifts: Shift[] = []
@@ -323,6 +346,29 @@ export async function updateShiftStatus(shiftId: string, status: ShiftStatus, do
     updated_at: new Date().toISOString(),
   }
 
+  // VALIDATION: Problem 1 - Overlapping Shifts
+  if (status === "confirmed") {
+    const doctorToCheck = currentShift.doctor_id || doctorId || user.id
+    if (doctorToCheck) {
+      const { data: existingShifts, error: overlapError } = await adminSupabase
+        .from("shifts")
+        .select("id, shift_hours")
+        .eq("doctor_id", doctorToCheck)
+        .eq("shift_date", currentShift.shift_date)
+        .eq("status", "confirmed")
+        .neq("id", shiftId) // Exclude current shift
+
+      if (overlapError) {
+        console.error("Error checking overlaps:", overlapError)
+      } else if (existingShifts && existingShifts.length > 0) {
+        const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours, currentShift.shift_hours))
+        if (hasOverlap) {
+          return { error: "Ya tenés un turno asignado en ese horario." }
+        }
+      }
+    }
+  }
+
   // 2. Prepare updates based on target status
   if (status === "confirmed") {
     updates.status = "confirmed"
@@ -447,7 +493,7 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
   // Get shift to check pool requirements
   const { data: shiftCheck, error: shiftError } = await supabase
     .from("shifts")
-    .select("status")
+    .select("status, shift_date, shift_hours")
     .eq("id", shiftId)
     .single()
 
@@ -457,6 +503,23 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
 
   if (shiftCheck.status !== 'free' && shiftCheck.status !== 'free_pending') {
     return { error: "Esta guardia ya ha sido tomada" }
+  }
+
+  // VALIDATION: Problem 1 - Overlapping Shifts
+  const { data: existingShifts, error: overlapError } = await supabase
+    .from("shifts")
+    .select("id, shift_hours")
+    .eq("doctor_id", doctorId)
+    .eq("shift_date", shiftCheck.shift_date)
+    .eq("status", "confirmed")
+
+  if (overlapError) {
+    console.error("Error checking overlaps:", overlapError)
+  } else if (existingShifts && existingShifts.length > 0) {
+    const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours, shiftCheck.shift_hours))
+    if (hasOverlap) {
+      return { error: "Ya tenés un turno asignado en ese horario." }
+    }
   }
 
   // Permission Logic REMOVED: Any doctor can take any free shift now.
@@ -539,6 +602,32 @@ export async function updateShift(shiftId: string, updates: any) {
 
   // Prepare updates object
   let finalUpdates = { ...shiftUpdates, updated_at: new Date().toISOString() }
+
+  // VALIDATION: Problem 3 - Admin-Side Overlap Validation
+  // If doctor is being assigned or changed, or hours/date changed for assigned shift
+  const targetDoctorId = shiftUpdates.doctor_id || oldShift.doctor_id
+  const targetDate = shiftUpdates.shift_date || oldShift.shift_date
+  const targetHours = shiftUpdates.shift_hours || oldShift.shift_hours
+  const targetStatus = shiftUpdates.status || oldShift.status
+
+  if (targetDoctorId && targetStatus === "confirmed") {
+    const { data: existingShifts, error: overlapError } = await supabase
+      .from("shifts")
+      .select("id, shift_hours")
+      .eq("doctor_id", targetDoctorId)
+      .eq("shift_date", targetDate)
+      .eq("status", "confirmed")
+      .neq("id", shiftId)
+
+    if (overlapError) {
+      console.error("Error checking overlaps:", overlapError)
+    } else if (existingShifts && existingShifts.length > 0) {
+      const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours!, targetHours!))
+      if (hasOverlap) {
+        return { error: "El médico ya tiene un turno asignado en ese horario." }
+      }
+    }
+  }
 
   // If converting to recurring
   let newRecurrenceId = null
@@ -780,11 +869,10 @@ export async function clockIn(shiftId: string, doctorId: string) {
     return { error: "Ya has marcado entrada para esta guardia" }
   }
 
-  // Optional: Check if it's the correct day
-  const today = new Date().toISOString().split('T')[0]
+  // VALIDATION: Problem 2 - Check-in/out on correct day
+  const today = format(new Date(), "yyyy-MM-dd")
   if (shift.shift_date !== today) {
-    // We allow clock-in for flexibility, but maybe warn? For now, allow it.
-    // return { error: "Solo puedes marcar entrada el día de la guardia" }
+    return { error: "El check-in y check-out solo están disponibles el día del turno." }
   }
 
   const { data, error } = await supabase
@@ -839,6 +927,12 @@ export async function clockOut(shiftId: string, doctorId: string) {
 
   if (shift.clock_out) {
     return { error: "Ya has marcado salida para esta guardia" }
+  }
+
+  // VALIDATION: Problem 2 - Check-in/out on correct day
+  const today = format(new Date(), "yyyy-MM-dd")
+  if (shift.shift_date !== today) {
+    return { error: "El check-in y check-out solo están disponibles el día del turno." }
   }
 
   const { data, error } = await supabase

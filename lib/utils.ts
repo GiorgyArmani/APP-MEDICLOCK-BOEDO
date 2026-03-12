@@ -63,3 +63,33 @@ export function getRelativeDateString(date: Date | string): string {
   if (isTomorrow(date)) return 'Mañana'
   return formatDate(date)
 }
+
+/**
+ * Checks if two shifts overlap based on their hour ranges (e.g. "8-14", "20-8")
+ * Implementation follows: startA < endB AND startB < endA
+ * For overnight shifts (e.g. 20-8), we add 24 to the end time.
+ */
+export function shiftsOverlap(hours1: string, hours2: string): boolean {
+  const parseRange = (h: string) => {
+    // Expected format: "8-14" or "20-8" or "8-20"
+    const [startStr, endStr] = h.split('-').map(s => s.trim())
+    let start = parseInt(startStr, 10)
+    let end = parseInt(endStr, 10)
+
+    if (isNaN(start) || isNaN(end)) return null
+
+    // Handle overnight shifts (e.g., 20 to 8)
+    if (end <= start) {
+      end += 24
+    }
+    return { start, end }
+  }
+
+  const range1 = parseRange(hours1)
+  const range2 = parseRange(hours2)
+
+  if (!range1 || !range2) return false
+
+  // Overlap condition: start1 < end2 AND start2 < end1
+  return range1.start < range2.end && range2.start < range1.end
+}
