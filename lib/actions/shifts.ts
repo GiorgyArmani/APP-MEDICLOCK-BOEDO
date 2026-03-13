@@ -10,7 +10,7 @@ import {
   sendBulkFreeShiftAlert,
 } from "@/lib/notifications/email"
 import { notifyFreeShift } from "@/lib/notifications/in-app"
-import { format, parseISO } from "date-fns"
+import { format, parseISO, subDays, addDays } from "date-fns"
 import { shiftsOverlap } from "@/lib/utils"
 
 export async function getShifts(): Promise<Shift[]> {
@@ -869,10 +869,16 @@ export async function clockIn(shiftId: string, doctorId: string) {
     return { error: "Ya has marcado entrada para esta guardia" }
   }
 
-  // VALIDATION: Problem 2 - Check-in/out on correct day
-  const today = format(new Date(), "yyyy-MM-dd")
-  if (shift.shift_date !== today) {
-    return { error: "El check-in y check-out solo están disponibles el día del turno." }
+  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day)
+  const now = new Date()
+  const today = format(now, "yyyy-MM-dd")
+  const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
+  const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
+  
+  const allowedDates = [yesterday, today, tomorrow]
+  
+  if (!allowedDates.includes(shift.shift_date)) {
+    return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }
 
   const { data, error } = await supabase
@@ -929,10 +935,16 @@ export async function clockOut(shiftId: string, doctorId: string) {
     return { error: "Ya has marcado salida para esta guardia" }
   }
 
-  // VALIDATION: Problem 2 - Check-in/out on correct day
-  const today = format(new Date(), "yyyy-MM-dd")
-  if (shift.shift_date !== today) {
-    return { error: "El check-in y check-out solo están disponibles el día del turno." }
+  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day)
+  const now = new Date()
+  const today = format(now, "yyyy-MM-dd")
+  const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
+  const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
+  
+  const allowedDates = [yesterday, today, tomorrow]
+  
+  if (!allowedDates.includes(shift.shift_date)) {
+    return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }
 
   const { data, error } = await supabase

@@ -238,22 +238,27 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
         {shift.status === "confirmed" && isAssignedToMe && (
           <div className="flex flex-col gap-3 pt-4 border-t border-slate-200">
             {(() => {
-              const today = new Date()
-              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
-              const isToday = shift.shift_date === todayStr
+              const now = new Date()
+              const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+              const [y, m, d] = shift.shift_date.split("-").map(Number)
+              const shiftDate = new Date(y, m - 1, d)
+              
+              const diffTime = Math.abs(shiftDate.getTime() - today.getTime())
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+              const isAllowed = diffDays <= 1
 
               if (!shift.clock_in) {
                 return (
                   <div className="space-y-2">
-                    {!isToday && (
+                    {!isAllowed && (
                       <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
                         <AlertCircle className="h-3 w-3" />
-                        Check-in disponible solo el día del turno
+                        Check-in disponible cerca de la fecha del turno
                       </p>
                     )}
                     <Button
                       onClick={handleClockIn}
-                      disabled={isPending || !isToday}
+                      disabled={isPending || !isAllowed}
                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                     >
                       <Clock className="h-4 w-4 mr-2" />
@@ -266,10 +271,10 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
               if (shift.clock_in && !shift.clock_out) {
                 return (
                   <div className="space-y-2">
-                    {!isToday && (
+                    {!isAllowed && (
                       <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
                         <AlertCircle className="h-3 w-3" />
-                        Check-out disponible solo el día del turno
+                        Check-out disponible cerca de la fecha del turno
                       </p>
                     )}
                     <div className="text-sm text-center text-emerald-700 font-medium bg-emerald-50 p-2 rounded">
@@ -277,7 +282,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
                     </div>
                     <Button
                       onClick={handleClockOut}
-                      disabled={isPending || !isToday}
+                      disabled={isPending || !isAllowed}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       <Clock className="h-4 w-4 mr-2" />
