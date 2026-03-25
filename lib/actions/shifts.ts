@@ -149,10 +149,19 @@ export async function createShift(shiftData: CreateShiftParams) {
   // VALIDATION: Problem 3 - Admin-Side Overlap Validation
   // If assigning to a doctor, check for overlaps
   if (baseShiftData.doctor_id) {
+    // Fetch doctor role to check for admin exception
+    const { data: doctorData } = await supabase
+      .from("doctors")
+      .select("role")
+      .eq("id", baseShiftData.doctor_id)
+      .single()
+    
+    const isDoctorAdmin = doctorData?.role === 'administrator'
+
     for (const shift of shiftsToInsert) {
       const { data: existingShifts, error: overlapError } = await supabase
         .from("shifts")
-        .select("id, shift_hours")
+        .select("id, shift_hours, shift_category")
         .eq("doctor_id", shift.doctor_id!)
         .eq("shift_date", shift.shift_date)
         .eq("status", "confirmed")
@@ -160,9 +169,17 @@ export async function createShift(shiftData: CreateShiftParams) {
       if (overlapError) {
         console.error("Error checking overlaps:", overlapError)
       } else if (existingShifts && existingShifts.length > 0) {
-        const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours!, shift.shift_hours!))
-        if (hasOverlap) {
-          return { error: `El médico ya tiene un turno asignado en el horario ${shift.shift_hours} el día ${shift.shift_date}.` }
+        const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours!, shift.shift_hours!))
+        
+        if (overlappingShifts.length > 0) {
+          // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
+          const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+            shift.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
+          )
+
+          if (!allOverlapsAllowed) {
+            return { error: `El médico ya tiene un turno asignado en el horario ${shift.shift_hours} el día ${shift.shift_date}.` }
+          }
         }
       }
     }
@@ -350,9 +367,19 @@ export async function updateShiftStatus(shiftId: string, status: ShiftStatus, do
   if (status === "confirmed") {
     const doctorToCheck = currentShift.doctor_id || doctorId || user.id
     if (doctorToCheck) {
+      // Fetch doctor role if not already known (requesterProfile has it if it's the user)
+      // But we need the role of 'doctorToCheck'
+      let isTargetDoctorAdmin = false
+      if (doctorToCheck === user.id) {
+        isTargetDoctorAdmin = isAdmin
+      } else {
+        const { data: docData } = await adminSupabase.from("doctors").select("role").eq("id", doctorToCheck).single()
+        isTargetDoctorAdmin = docData?.role === 'administrator'
+      }
+
       const { data: existingShifts, error: overlapError } = await adminSupabase
         .from("shifts")
-        .select("id, shift_hours")
+        .select("id, shift_hours, shift_category")
         .eq("doctor_id", doctorToCheck)
         .eq("shift_date", currentShift.shift_date)
         .eq("status", "confirmed")
@@ -361,9 +388,17 @@ export async function updateShiftStatus(shiftId: string, status: ShiftStatus, do
       if (overlapError) {
         console.error("Error checking overlaps:", overlapError)
       } else if (existingShifts && existingShifts.length > 0) {
-        const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours, currentShift.shift_hours))
-        if (hasOverlap) {
-          return { error: "Ya tenés un turno asignado en ese horario." }
+        const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours, currentShift.shift_hours))
+        
+        if (overlappingShifts.length > 0) {
+          // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
+          const allOverlapsAllowed = isTargetDoctorAdmin && overlappingShifts.every(s => 
+            currentShift.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
+          )
+
+          if (!allOverlapsAllowed) {
+            return { error: "Ya tenés un turno asignado en ese horario." }
+          }
         }
       }
     }
@@ -493,7 +528,7 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
   // Get shift to check pool requirements
   const { data: shiftCheck, error: shiftError } = await supabase
     .from("shifts")
-    .select("status, shift_date, shift_hours")
+    .select("status, shift_date, shift_hours, shift_category")
     .eq("id", shiftId)
     .single()
 
@@ -508,7 +543,7 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
   // VALIDATION: Problem 1 - Overlapping Shifts
   const { data: existingShifts, error: overlapError } = await supabase
     .from("shifts")
-    .select("id, shift_hours")
+    .select("id, shift_hours, shift_category")
     .eq("doctor_id", doctorId)
     .eq("shift_date", shiftCheck.shift_date)
     .eq("status", "confirmed")
@@ -516,9 +551,18 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
   if (overlapError) {
     console.error("Error checking overlaps:", overlapError)
   } else if (existingShifts && existingShifts.length > 0) {
-    const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours, shiftCheck.shift_hours))
-    if (hasOverlap) {
-      return { error: "Ya tenés un turno asignado en ese horario." }
+    const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours, shiftCheck.shift_hours))
+    
+    if (overlappingShifts.length > 0) {
+      // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
+      const isDoctorAdmin = doctorProfile?.role === 'administrator'
+      const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+        shiftCheck.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
+      )
+
+      if (!allOverlapsAllowed) {
+        return { error: "Ya tenés un turno asignado en ese horario." }
+      }
     }
   }
 
@@ -611,9 +655,18 @@ export async function updateShift(shiftId: string, updates: any) {
   const targetStatus = shiftUpdates.status || oldShift.status
 
   if (targetDoctorId && targetStatus === "confirmed") {
+    // Fetch doctor role to check for admin exception
+    const { data: doctorData } = await supabase
+      .from("doctors")
+      .select("role")
+      .eq("id", targetDoctorId)
+      .single()
+    
+    const isDoctorAdmin = doctorData?.role === 'administrator'
+
     const { data: existingShifts, error: overlapError } = await supabase
       .from("shifts")
-      .select("id, shift_hours")
+      .select("id, shift_hours, shift_category")
       .eq("doctor_id", targetDoctorId)
       .eq("shift_date", targetDate)
       .eq("status", "confirmed")
@@ -622,9 +675,17 @@ export async function updateShift(shiftId: string, updates: any) {
     if (overlapError) {
       console.error("Error checking overlaps:", overlapError)
     } else if (existingShifts && existingShifts.length > 0) {
-      const hasOverlap = existingShifts.some(s => shiftsOverlap(s.shift_hours!, targetHours!))
-      if (hasOverlap) {
-        return { error: "El médico ya tiene un turno asignado en ese horario." }
+      const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours!, targetHours!))
+      
+      if (overlappingShifts.length > 0) {
+        // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
+        const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+          (shiftUpdates.shift_category || oldShift.shift_category) === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
+        )
+
+        if (!allOverlapsAllowed) {
+          return { error: "El médico ya tiene un turno asignado en ese horario." }
+        }
       }
     }
   }
