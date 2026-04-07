@@ -16,14 +16,33 @@ import { shiftsOverlap } from "@/lib/utils"
 export async function getShifts(): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
 
-  const { data: shifts, error } = await supabase.from("shifts").select("*").order("shift_date", { ascending: false })
+  let allShifts: Shift[] = []
+  let hasMore = true
+  let page = 0
+  const pageSize = 1000
 
-  if (error) {
-    console.error("Error fetching shifts:", error)
-    return []
+  while (hasMore) {
+    const { data: shifts, error } = await supabase
+      .from("shifts")
+      .select("*")
+      .order("shift_date", { ascending: false })
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error) {
+      console.error("Error fetching shifts:", error)
+      return allShifts.length > 0 ? allShifts : []
+    }
+
+    if (shifts) {
+      allShifts = [...allShifts, ...(shifts as Shift[])]
+      hasMore = shifts.length === pageSize
+    } else {
+      hasMore = false
+    }
+    page++
   }
 
-  return shifts as Shift[]
+  return allShifts
 }
 
 /**
@@ -35,19 +54,35 @@ export async function getShifts(): Promise<Shift[]> {
 export async function getShiftsByDateRange(dateFrom: string, dateTo: string): Promise<Shift[]> {
   const adminSupabase = await getSupabaseAdminClient()
 
-  const { data: shifts, error } = await adminSupabase
-    .from("shifts")
-    .select("*")
-    .gte("shift_date", dateFrom)
-    .lte("shift_date", dateTo)
-    .order("shift_date", { ascending: false })
+  let allShifts: Shift[] = []
+  let hasMore = true
+  let page = 0
+  const pageSize = 1000
 
-  if (error) {
-    console.error("Error fetching shifts by date range:", error)
-    return []
+  while (hasMore) {
+    const { data: shifts, error } = await adminSupabase
+      .from("shifts")
+      .select("*")
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .order("shift_date", { ascending: false })
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error) {
+      console.error("Error fetching shifts by date range:", error)
+      return allShifts.length > 0 ? allShifts : []
+    }
+
+    if (shifts) {
+      allShifts = [...allShifts, ...(shifts as Shift[])]
+      hasMore = shifts.length === pageSize
+    } else {
+      hasMore = false
+    }
+    page++
   }
 
-  return shifts as Shift[]
+  return allShifts
 }
 
 
@@ -58,17 +93,33 @@ export async function getShiftsByDateRange(dateFrom: string, dateTo: string): Pr
 export async function getShiftsForHonorarios(): Promise<Shift[]> {
   const adminSupabase = await getSupabaseAdminClient()
 
-  const { data: shifts, error } = await adminSupabase
-    .from("shifts")
-    .select("*")
-    .order("shift_date", { ascending: true })
+  let allShifts: Shift[] = []
+  let hasMore = true
+  let page = 0
+  const pageSize = 1000
 
-  if (error) {
-    console.error("Error fetching shifts for honorarios:", error)
-    return []
+  while (hasMore) {
+    const { data: shifts, error } = await adminSupabase
+      .from("shifts")
+      .select("*")
+      .order("shift_date", { ascending: true })
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error) {
+      console.error("Error fetching shifts for honorarios:", error)
+      return allShifts.length > 0 ? allShifts : []
+    }
+
+    if (shifts) {
+      allShifts = [...allShifts, ...(shifts as Shift[])]
+      hasMore = shifts.length === pageSize
+    } else {
+      hasMore = false
+    }
+    page++
   }
 
-  return shifts as Shift[]
+  return allShifts
 }
 
 /**
@@ -77,19 +128,35 @@ export async function getShiftsForHonorarios(): Promise<Shift[]> {
 export async function getDoctorShiftsByDateRange(dateFrom: string, dateTo: string): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
 
-  const { data: shifts, error } = await supabase
-    .from("shifts")
-    .select("*")
-    .gte("shift_date", dateFrom)
-    .lte("shift_date", dateTo)
-    .order("shift_date", { ascending: true })
+  let allShifts: Shift[] = []
+  let hasMore = true
+  let page = 0
+  const pageSize = 1000
 
-  if (error) {
-    console.error("Error fetching doctor shifts by date range:", error)
-    return []
+  while (hasMore) {
+    const { data: shifts, error } = await supabase
+      .from("shifts")
+      .select("*")
+      .gte("shift_date", dateFrom)
+      .lte("shift_date", dateTo)
+      .order("shift_date", { ascending: true })
+      .range(page * pageSize, (page + 1) * pageSize - 1)
+
+    if (error) {
+      console.error("Error fetching doctor shifts by date range:", error)
+      return allShifts.length > 0 ? allShifts : []
+    }
+
+    if (shifts) {
+      allShifts = [...allShifts, ...(shifts as Shift[])]
+      hasMore = shifts.length === pageSize
+    } else {
+      hasMore = false
+    }
+    page++
   }
 
-  return shifts as Shift[]
+  return allShifts
 }
 
 export async function getShiftsByDoctor(doctorId: string): Promise<Shift[]> {
