@@ -4,6 +4,7 @@ export const SHIFT_TYPES = [
     { value: "consultorio_c10_8_14", label: "Consultorio C 10 8-14", area: "consultorio", hours: "8-14" },
     { value: "consultorio_c10_14_20", label: "Consultorio C 10 14-20", area: "consultorio", hours: "14-20" },
     { value: "refuerzo_8_20", label: "Refuerzo 8-20", area: "refuerzo", hours: "8-20" },
+    { value: "refuerzo_8_14", label: "Refuerzo 8-14", area: "refuerzo", hours: "8-14" },
     { value: "refuerzo_14_20", label: "Refuerzo 14-20", area: "refuerzo", hours: "14-20" },
     { value: "internacion_5000_8_14", label: "Internación clínica 8-14 (5000)", area: "internacion", hours: "8-14" },
     { value: "internacion_5000_14_20", label: "Internación clínica 14-20 (5000)", area: "internacion", hours: "14-20" },
