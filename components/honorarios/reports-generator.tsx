@@ -20,6 +20,7 @@ import {
     getBase64ImageFromURL,
     getShiftTurn,
     getDayType,
+    getPresentismo,
 } from "@/lib/utils/export-utils"
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { es } from "date-fns/locale"
@@ -396,6 +397,20 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                             <p className="text-xs text-slate-500">🎉 Fin de Semana</p>
                             <p className="text-xl font-bold text-slate-700">
                                 {filteredShifts.filter(s => getDayType(s.shift_date) === "Fin de Semana").length}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
+                        <div>
+                            <p className="text-xs text-rose-500 font-medium">⚠️ Tardanzas</p>
+                            <p className="text-xl font-bold text-rose-600">
+                                {filteredShifts.filter(s => getPresentismo(s) === "Tardanza").length}
+                            </p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-red-600 font-bold">🚨 Tardanzas Severas</p>
+                            <p className="text-xl font-bold text-red-700">
+                                {filteredShifts.filter(s => getPresentismo(s) === "Tardanza Severa").length}
                             </p>
                         </div>
                     </div>

@@ -10,9 +10,35 @@ export interface ShiftExportData {
     shiftHours: string
     clockIn: string
     clockOut: string
+    presentismo: string  // "A tiempo", "Tardanza", "Tardanza Severa", "-"
     status: string
     adminNotes: string
     doctorNotes: string
+}
+
+/**
+ * Calculates presentismo (tardiness) based on clock_in time.
+ */
+export function getPresentismo(shift: Shift): string {
+    if (!shift.clock_in) return "-"
+    if (!shift.shift_hours || shift.shift_hours === "variable") return "A tiempo"
+
+    const startHourStr = shift.shift_hours.split('-')[0]
+    const startHour = parseInt(startHourStr, 10)
+
+    if (isNaN(startHour)) return "A tiempo"
+
+    const [y, m, d] = shift.shift_date.split("-").map(Number)
+    const scheduledStart = new Date(y, m - 1, d, startHour, 0, 0)
+    const clockInTime = new Date(shift.clock_in)
+    
+    const diffMinutes = (clockInTime.getTime() - scheduledStart.getTime()) / (1000 * 60)
+
+    if (diffMinutes <= 15) return "A tiempo"
+    if (diffMinutes > 15 && diffMinutes < 30) return "Tardanza"
+    if (diffMinutes >= 30) return "Tardanza Severa"
+    
+    return "-"
 }
 
 /**
@@ -53,6 +79,7 @@ export function formatShiftDataForExport(shifts: Shift[], doctors: Doctor[]): Sh
             shiftHours: shift.shift_hours,
             clockIn: shift.clock_in ? formatTimeForExport(shift.clock_in) : "-",
             clockOut: shift.clock_out ? formatTimeForExport(shift.clock_out) : "-",
+            presentismo: getPresentismo(shift),
             status: formatStatus(shift.status),
             adminNotes: shift.notes || "-",
             doctorNotes: shift.doctor_notes || "-",
@@ -74,6 +101,7 @@ export function generateCSV(data: ShiftExportData[]): string {
         "Horario",
         "Entrada",
         "Salida",
+        "Presentismo",
         "Estado",
         "Notas Admin",
         "Notas Médico",
@@ -89,6 +117,7 @@ export function generateCSV(data: ShiftExportData[]): string {
         row.shiftHours,
         row.clockIn,
         row.clockOut,
+        row.presentismo,
         row.status,
         row.adminNotes,
         row.doctorNotes,
@@ -137,6 +166,8 @@ export interface DoctorMonthlySummary {
     nightShifts: number
     weekendShifts: number
     totalHours: number
+    tardanzas: number
+    tardanzasSeveras: number
     shifts: ShiftExportData[]
 }
 
@@ -161,6 +192,8 @@ export function generateMonthlySummary(
                 nightShifts: 0,
                 weekendShifts: 0,
                 totalHours: 0,
+                tardanzas: 0,
+                tardanzasSeveras: 0,
                 shifts: [],
             })
         }
@@ -178,6 +211,10 @@ export function generateMonthlySummary(
 
         const dayType = getDayType(shift.shift_date)
         if (dayType === "Fin de Semana") summary.weekendShifts++
+
+        const presentismo = getPresentismo(shift)
+        if (presentismo === "Tardanza") summary.tardanzas++
+        if (presentismo === "Tardanza Severa") summary.tardanzasSeveras++
 
         // Calculate hours if clock in/out are available
         if (shift.clock_in && shift.clock_out) {
@@ -197,6 +234,7 @@ export function generateMonthlySummary(
             shiftHours: shift.shift_hours,
             clockIn: shift.clock_in ? formatTimeForExport(shift.clock_in) : "-",
             clockOut: shift.clock_out ? formatTimeForExport(shift.clock_out) : "-",
+            presentismo: presentismo,
             status: formatStatus(shift.status),
             adminNotes: shift.notes || "-",
             doctorNotes: shift.doctor_notes || "-",
@@ -220,6 +258,8 @@ export function generateMonthlySummaryCSV(summaries: DoctorMonthlySummary[]): st
         "Turno Noche",
         "Fin de Semana",
         "Horas Totales",
+        "Tardanzas",
+        "Tard. Severas",
     ]
 
     const rows = summaries.map((summary) => [
@@ -230,6 +270,8 @@ export function generateMonthlySummaryCSV(summaries: DoctorMonthlySummary[]): st
         summary.nightShifts.toString(),
         summary.weekendShifts.toString(),
         summary.totalHours.toFixed(2),
+        summary.tardanzas.toString(),
+        summary.tardanzasSeveras.toString(),
     ])
 
     const csvContent = [
@@ -271,16 +313,16 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
     // Table
     autoTable(doc, {
         startY: 40,
-        head: [["Médico", "Fecha", "Turno", "Tipo de Día", "Área", "Horario", "Entrada", "Salida", "Estado"]],
+        head: [["Médico", "Fecha", "Turno", "Día", "Horario", "Entrada", "Salida", "Presentismo", "Estado"]],
         body: data.map(r => [
             r.doctorName,
             r.shiftDate,
             r.shiftTurn,
-            r.dayType,
-            r.shiftArea,
+            r.dayType === "Fin de Semana" ? "Finde" : "Sem",
             r.shiftHours,
             r.clockIn,
             r.clockOut,
+            r.presentismo,
             r.status
         ]),
         styles: { fontSize: 7, cellPadding: 2 },
@@ -288,7 +330,8 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
         alternateRowStyles: { fillColor: [248, 250, 252] }, // slate-50
         columnStyles: {
             2: { cellWidth: 16 }, // Turno
-            3: { cellWidth: 28 }, // Tipo de Día
+            3: { cellWidth: 16 }, // Día
+            7: { cellWidth: 24 }, // Presentismo
         }
     })
 
@@ -326,7 +369,7 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
     // Table
     autoTable(doc, {
         startY: 40,
-        head: [["Médico", "Total Guardias", "Confirmadas", "Turno Día", "Turno Noche", "Fin de Semana", "Horas Totales"]],
+        head: [["Médico", "Total", "Conf.", "Turno Día", "Noche", "Finde", "Horas", "Tard..", "Tard Sev."]],
         body: summaries.map(s => [
             s.doctorName,
             s.totalShifts.toString(),
@@ -334,9 +377,11 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
             s.dayShifts.toString(),
             s.nightShifts.toString(),
             s.weekendShifts.toString(),
-            s.totalHours.toFixed(2)
+            s.totalHours.toFixed(2),
+            s.tardanzas.toString(),
+            s.tardanzasSeveras.toString()
         ]),
-        styles: { fontSize: 9, cellPadding: 3 },
+        styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [37, 99, 235], textColor: 255 }, // blue-600
         alternateRowStyles: { fillColor: [248, 250, 252] },
     })

@@ -222,7 +222,7 @@ export async function createShift(shiftData: CreateShiftParams) {
       .select("role")
       .eq("id", baseShiftData.doctor_id)
       .single()
-    
+
     const isDoctorAdmin = doctorData?.role === 'administrator'
 
     for (const shift of shiftsToInsert) {
@@ -237,10 +237,10 @@ export async function createShift(shiftData: CreateShiftParams) {
         console.error("Error checking overlaps:", overlapError)
       } else if (existingShifts && existingShifts.length > 0) {
         const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours!, shift.shift_hours!))
-        
+
         if (overlappingShifts.length > 0) {
           // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
-          const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+          const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s =>
             shift.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
           )
 
@@ -456,10 +456,10 @@ export async function updateShiftStatus(shiftId: string, status: ShiftStatus, do
         console.error("Error checking overlaps:", overlapError)
       } else if (existingShifts && existingShifts.length > 0) {
         const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours, currentShift.shift_hours))
-        
+
         if (overlappingShifts.length > 0) {
           // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
-          const allOverlapsAllowed = isTargetDoctorAdmin && overlappingShifts.every(s => 
+          const allOverlapsAllowed = isTargetDoctorAdmin && overlappingShifts.every(s =>
             currentShift.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
           )
 
@@ -619,11 +619,11 @@ export async function acceptFreeShift(shiftId: string, doctorId: string) {
     console.error("Error checking overlaps:", overlapError)
   } else if (existingShifts && existingShifts.length > 0) {
     const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours, shiftCheck.shift_hours))
-    
+
     if (overlappingShifts.length > 0) {
       // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
       const isDoctorAdmin = doctorProfile?.role === 'administrator'
-      const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+      const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s =>
         shiftCheck.shift_category === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
       )
 
@@ -728,7 +728,7 @@ export async function updateShift(shiftId: string, updates: any) {
       .select("role")
       .eq("id", targetDoctorId)
       .single()
-    
+
     const isDoctorAdmin = doctorData?.role === 'administrator'
 
     const { data: existingShifts, error: overlapError } = await supabase
@@ -743,10 +743,10 @@ export async function updateShift(shiftId: string, updates: any) {
       console.error("Error checking overlaps:", overlapError)
     } else if (existingShifts && existingShifts.length > 0) {
       const overlappingShifts = existingShifts.filter(s => shiftsOverlap(s.shift_hours!, targetHours!))
-      
+
       if (overlappingShifts.length > 0) {
         // EXCEPTION: Admins can have multiple shifts if every overlap involves at least one "reemplazo socios"
-        const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s => 
+        const allOverlapsAllowed = isDoctorAdmin && overlappingShifts.every(s =>
           (shiftUpdates.shift_category || oldShift.shift_category) === 'remplazo_socios' || s.shift_category === 'remplazo_socios'
         )
 
@@ -1002,18 +1002,57 @@ export async function clockIn(shiftId: string, doctorId: string) {
   const today = format(now, "yyyy-MM-dd")
   const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
   const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
-  
+
   const allowedDates = [yesterday, today, tomorrow]
-  
+
   if (!allowedDates.includes(shift.shift_date)) {
     return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }
 
+  // --- LÓGICA DE CONTROL DE HORARIO ESTRICTO ---
+  let eventType = "clock_in"
+  let notesForEvent = "Entrada registrada por el médico"
+  let returnMessage = "Entrada registrada exitosamente"
+
+  if (shift.shift_hours && shift.shift_hours !== "variable") {
+    // Parse the start hour from formats like "8-14", "14-20", "20-8"
+    const startHourStr = shift.shift_hours.split('-')[0]
+    const startHour = parseInt(startHourStr, 10)
+
+    if (!isNaN(startHour)) {
+      const [y, m, d] = shift.shift_date.split("-").map(Number)
+      const scheduledStart = new Date(y, m - 1, d, startHour, 0, 0)
+
+      const diffMinutes = (now.getTime() - scheduledStart.getTime()) / (1000 * 60)
+
+      if (diffMinutes < 0) {
+        return { error: "Aún no es hora de marcar entrada." }
+      }
+
+      if (diffMinutes > 35) {
+        return { error: "Tiempo límite excedido. Ya no puede marcar entrada. Solo puede registrar salida y agregar notas." }
+      }
+
+      if (diffMinutes >= 0 && diffMinutes <= 15) {
+        returnMessage = "Entrada registrada dentro del tiempo permitido."
+      } else if (diffMinutes > 15 && diffMinutes < 30) {
+        eventType = "clock_in_late"
+        notesForEvent = "Entrada con tardanza"
+        returnMessage = "Entrada registrada con tardanza; aplica descuento."
+      } else if (diffMinutes >= 30 && diffMinutes <= 35) {
+        eventType = "clock_in_severe_late"
+        notesForEvent = "Entrada con tardanza severa"
+        returnMessage = "Entrada registrada con tardanza severa; aplica descuento."
+      }
+    }
+  }
+  // ---------------------------------------------
+
   const { data, error } = await supabase
     .from("shifts")
     .update({
-      clock_in: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      clock_in: now.toISOString(),
+      updated_at: now.toISOString()
     })
     .eq("id", shiftId)
     .select()
@@ -1027,14 +1066,14 @@ export async function clockIn(shiftId: string, doctorId: string) {
   // Audit event
   await supabase.from("shift_events").insert({
     shift_id: shiftId,
-    event_type: "clock_in",
+    event_type: eventType,
     doctor_id: doctorId,
-    notes: "Entrada registrada por el médico"
+    notes: notesForEvent
   })
 
   revalidatePath("/dashboard")
   revalidatePath("/admin")
-  return { data }
+  return { data, message: returnMessage }
 }
 
 export async function clockOut(shiftId: string, doctorId: string) {
@@ -1068,9 +1107,9 @@ export async function clockOut(shiftId: string, doctorId: string) {
   const today = format(now, "yyyy-MM-dd")
   const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
   const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
-  
+
   const allowedDates = [yesterday, today, tomorrow]
-  
+
   if (!allowedDates.includes(shift.shift_date)) {
     return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }

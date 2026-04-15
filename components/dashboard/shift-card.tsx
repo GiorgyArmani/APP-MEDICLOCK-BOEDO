@@ -79,7 +79,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
       if (result.error) {
         toast.error(`Error: ${result.error}`)
       } else {
-        toast.success("Entrada registrada exitosamente")
+        toast.success(result.message || "Entrada registrada exitosamente")
         router.refresh()
       }
     })
