@@ -22,6 +22,7 @@ import {
     getDayType,
     getPresentismo,
 } from "@/lib/utils/export-utils"
+import { parseShiftDateTime } from "@/lib/utils/date-utils"
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { es } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
@@ -100,7 +101,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                 (selectedDayType === "finde" && dayType === "Fin de Semana")
 
             // Date filtering
-            const shiftDate = new Date(shift.shift_date + "T00:00:00")
+            const shiftDate = parseShiftDateTime(shift.shift_date)
             const matchesDateFrom = !dateFrom || shiftDate >= dateFrom
             const matchesDateTo = !dateTo || shiftDate <= dateTo
 

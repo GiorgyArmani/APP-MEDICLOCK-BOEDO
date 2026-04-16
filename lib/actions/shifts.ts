@@ -12,6 +12,7 @@ import {
 import { notifyFreeShift } from "@/lib/notifications/in-app"
 import { format, parseISO, subDays, addDays } from "date-fns"
 import { shiftsOverlap } from "@/lib/utils"
+import { getArgentinaValidationDates, parseShiftDateTime, getMinutesDiffFromNow } from "@/lib/utils/date-utils"
 
 export async function getShifts(): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
@@ -997,13 +998,8 @@ export async function clockIn(shiftId: string, doctorId: string) {
     return { error: "Ya has marcado entrada para esta guardia" }
   }
 
-  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day)
-  const now = new Date()
-  const today = format(now, "yyyy-MM-dd")
-  const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
-  const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
-
-  const allowedDates = [yesterday, today, tomorrow]
+  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day) in Argentina Time
+  const allowedDates = getArgentinaValidationDates()
 
   if (!allowedDates.includes(shift.shift_date)) {
     return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
@@ -1020,10 +1016,8 @@ export async function clockIn(shiftId: string, doctorId: string) {
     const startHour = parseInt(startHourStr, 10)
 
     if (!isNaN(startHour)) {
-      const [y, m, d] = shift.shift_date.split("-").map(Number)
-      const scheduledStart = new Date(y, m - 1, d, startHour, 0, 0)
-
-      const diffMinutes = (now.getTime() - scheduledStart.getTime()) / (1000 * 60)
+      const scheduledStart = parseShiftDateTime(shift.shift_date, startHourStr)
+      const diffMinutes = getMinutesDiffFromNow(scheduledStart)
 
       if (diffMinutes < 0) {
         return { error: "Aún no es hora de marcar entrada." }
@@ -1047,6 +1041,7 @@ export async function clockIn(shiftId: string, doctorId: string) {
     }
   }
   // ---------------------------------------------
+  const now = new Date()
 
   const { data, error } = await supabase
     .from("shifts")
@@ -1102,23 +1097,20 @@ export async function clockOut(shiftId: string, doctorId: string) {
     return { error: "Ya has marcado salida para esta guardia" }
   }
 
-  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day)
-  const now = new Date()
-  const today = format(now, "yyyy-MM-dd")
-  const yesterday = format(subDays(now, 1), "yyyy-MM-dd")
-  const tomorrow = format(addDays(now, 1), "yyyy-MM-dd")
-
-  const allowedDates = [yesterday, today, tomorrow]
+  // VALIDATION: Problem 2 & 5 - Relaxed Check-in/out window (+/- 1 day) in Argentina Time
+  const allowedDates = getArgentinaValidationDates()
 
   if (!allowedDates.includes(shift.shift_date)) {
     return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }
 
+  const now = new Date()
+
   const { data, error } = await supabase
     .from("shifts")
     .update({
-      clock_out: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      clock_out: now.toISOString(),
+      updated_at: now.toISOString()
     })
     .eq("id", shiftId)
     .select()

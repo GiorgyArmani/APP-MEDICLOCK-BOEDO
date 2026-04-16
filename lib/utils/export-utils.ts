@@ -1,4 +1,5 @@
 import type { Shift, Doctor } from "@/lib/supabase/types"
+import { parseShiftDateTime, parseUTCDate } from "./date-utils"
 
 export interface ShiftExportData {
     doctorName: string
@@ -28,9 +29,8 @@ export function getPresentismo(shift: Shift): string {
 
     if (isNaN(startHour)) return "A tiempo"
 
-    const [y, m, d] = shift.shift_date.split("-").map(Number)
-    const scheduledStart = new Date(y, m - 1, d, startHour, 0, 0)
-    const clockInTime = new Date(shift.clock_in)
+    const scheduledStart = parseShiftDateTime(shift.shift_date, startHourStr)
+    const clockInTime = parseUTCDate(shift.clock_in)
     
     const diffMinutes = (clockInTime.getTime() - scheduledStart.getTime()) / (1000 * 60)
 
@@ -57,7 +57,7 @@ export function getShiftTurn(hours: string): string {
  * Derives whether a shift falls on a weekday or weekend from the shift_date string.
  */
 export function getDayType(dateStr: string): string {
-    const date = new Date(dateStr + "T00:00:00")
+    const date = parseShiftDateTime(dateStr)
     const day = date.getDay() // 0 = Sunday, 6 = Saturday
     return day === 0 || day === 6 ? "Fin de Semana" : "Semana"
 }
@@ -391,7 +391,7 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
 
 // Helper functions
 function formatDateForExport(dateStr: string): string {
-    const date = new Date(dateStr + "T00:00:00")
+    const date = parseShiftDateTime(dateStr)
     return date.toLocaleDateString("es-ES", { year: "numeric", month: "2-digit", day: "2-digit" })
 }
 
