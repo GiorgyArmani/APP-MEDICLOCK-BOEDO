@@ -4,10 +4,42 @@ export const ARG_TIMEZONE = "America/Argentina/Buenos_Aires"
 export const ARG_OFFSET = "-03:00"
 
 /**
+ * Returns the current Date object adjusted to Argentina time.
+ * Safe to call from both server (UTC) and browser environments.
+ */
+export function getNowInArgentina(): Date {
+  // toLocaleDateString/toLocaleTimeString use the IANA timezone to derive the
+  // wall-clock date+time in Argentina, then we reconstruct a Date from that
+  // so all comparisons are done in Buenos Aires local time.
+  const now = new Date()
+  const argDateStr = now.toLocaleDateString("en-CA", { timeZone: ARG_TIMEZONE })     // "YYYY-MM-DD"
+  const argTimeStr = now.toLocaleTimeString("en-GB", { timeZone: ARG_TIMEZONE, hour12: false }) // "HH:MM:SS"
+  return new Date(`${argDateStr}T${argTimeStr}${ARG_OFFSET}`)
+}
+
+/**
  * Returns the current date string in YYYY-MM-DD format for Argentina.
+ * Safe to call from both server (UTC) and browser environments.
  */
 export function getArgentinaTodayString(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: ARG_TIMEZONE })
+}
+
+/**
+ * Returns true if the given date string (YYYY-MM-DD) matches today in Argentina.
+ */
+export function isTodayInArgentina(dateStr: string): boolean {
+  return dateStr === getArgentinaTodayString()
+}
+
+/**
+ * Returns true if the given date string (YYYY-MM-DD) matches tomorrow in Argentina.
+ */
+export function isTomorrowInArgentina(dateStr: string): boolean {
+  const todayStr = getArgentinaTodayString()
+  const todayDate = new Date(`${todayStr}T12:00:00${ARG_OFFSET}`)
+  const tomorrowStr = format(addDays(todayDate, 1), "yyyy-MM-dd")
+  return dateStr === tomorrowStr
 }
 
 /**

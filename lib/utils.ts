@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { getArgentinaTodayString, ARG_TIMEZONE, ARG_OFFSET } from "@/lib/utils/date-utils"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -41,8 +42,10 @@ export function formatDateTime(date: Date | string): string {
  */
 export function isToday(date: Date | string): boolean {
   const d = typeof date === 'string' ? new Date(date) : date
-  const today = new Date()
-  return d.toDateString() === today.toDateString()
+  // Compare using Argentina timezone — server is UTC so we must not use toDateString()
+  const argToday = getArgentinaTodayString()
+  const argDate = d.toLocaleDateString("en-CA", { timeZone: ARG_TIMEZONE })
+  return argDate === argToday
 }
 
 /**
@@ -50,9 +53,14 @@ export function isToday(date: Date | string): boolean {
  */
 export function isTomorrow(date: Date | string): boolean {
   const d = typeof date === 'string' ? new Date(date) : date
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  return d.toDateString() === tomorrow.toDateString()
+  // Compute tomorrow's date in Argentina timezone
+  const argToday = getArgentinaTodayString()
+  const todayDate = new Date(`${argToday}T12:00:00${ARG_OFFSET}`)
+  const tomorrowDate = new Date(todayDate)
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1)
+  const argTomorrow = tomorrowDate.toLocaleDateString("en-CA", { timeZone: ARG_TIMEZONE })
+  const argDate = d.toLocaleDateString("en-CA", { timeZone: ARG_TIMEZONE })
+  return argDate === argTomorrow
 }
 
 /**

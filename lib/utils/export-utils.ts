@@ -1,5 +1,5 @@
 import type { Shift, Doctor } from "@/lib/supabase/types"
-import { parseShiftDateTime, parseUTCDate } from "./date-utils"
+import { parseShiftDateTime, parseUTCDate, ARG_TIMEZONE } from "./date-utils"
 
 export interface ShiftExportData {
     doctorName: string
@@ -308,7 +308,7 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
     // Subheader
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139) // slate-500
-    doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 30)
+    doc.text(`Fecha de generación: ${new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })}`, 14, 30)
 
     // Table
     autoTable(doc, {
@@ -364,7 +364,7 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
     // Subheader
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139)
-    doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 14, 30)
+    doc.text(`Fecha de generación: ${new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })}`, 14, 30)
 
     // Table
     autoTable(doc, {
