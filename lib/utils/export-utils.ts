@@ -285,7 +285,7 @@ export function generateMonthlySummaryCSV(summaries: DoctorMonthlySummary[]): st
 /**
  * Generates PDF for detailed shift report using jspdf
  */
-export async function generatePDF(data: ShiftExportData[], title: string, logoBase64?: string) {
+export async function generatePDF(data: ShiftExportData[], title: string, logoBase64?: string, period?: string) {
     const { jsPDF } = await import("jspdf")
     const autoTable = (await import("jspdf-autotable")).default
 
@@ -305,20 +305,40 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
     doc.setTextColor(30, 41, 59) // slate-800
     doc.text(title, 14, 22)
 
-    // Subheader
+    // Subheader: generation date + optional period
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139) // slate-500
-    doc.text(`Fecha de generación: ${new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })}`, 14, 30)
+    const generationDate = new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })
+    const subheader = period
+        ? `Fecha de generación: ${generationDate}  ·  Período: ${period}`
+        : `Fecha de generación: ${generationDate}`
+    doc.text(subheader, 14, 30)
+
+    // Summary stats
+    const totalShifts = data.length
+    const dayShifts = data.filter(r => r.shiftTurn === "Día").length
+    const nightShifts = data.filter(r => r.shiftTurn === "Noche").length
+    const tardanzas = data.filter(r => r.presentismo === "Tardanza").length
+    const tardanzasSeveras = data.filter(r => r.presentismo === "Tardanza Severa").length
+
+    doc.setFontSize(9)
+    doc.setTextColor(51, 65, 85) // slate-700
+    doc.text(
+        `Total: ${totalShifts} guardias  ·  Día: ${dayShifts}  ·  Noche: ${nightShifts}  ·  Tardanzas: ${tardanzas}  ·  Severas: ${tardanzasSeveras}`,
+        14,
+        37
+    )
 
     // Table
     autoTable(doc, {
-        startY: 40,
-        head: [["Médico", "Fecha", "Turno", "Día", "Horario", "Entrada", "Salida", "Presentismo", "Estado"]],
+        startY: 44,
+        head: [["Médico", "Fecha", "Turno", "Día", "Área", "Horario", "Entrada", "Salida", "Presentismo", "Estado"]],
         body: data.map(r => [
             r.doctorName,
             r.shiftDate,
             r.shiftTurn,
             r.dayType === "Fin de Semana" ? "Finde" : "Sem",
+            r.shiftArea,
             r.shiftHours,
             r.clockIn,
             r.clockOut,
@@ -331,9 +351,36 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
         columnStyles: {
             2: { cellWidth: 16 }, // Turno
             3: { cellWidth: 16 }, // Día
-            7: { cellWidth: 24 }, // Presentismo
+            4: { cellWidth: 22 }, // Área
+            8: { cellWidth: 24 }, // Presentismo
+        },
+        didParseCell: (hookData) => {
+            // Color the Presentismo cell (column index 8) by severity
+            if (hookData.section === "body" && hookData.column.index === 8) {
+                const value = String(hookData.cell.raw)
+                if (value === "Tardanza") {
+                    hookData.cell.styles.fillColor = [254, 215, 170] // amber-200
+                    hookData.cell.styles.textColor = [180, 83, 9]    // amber-700
+                    hookData.cell.styles.fontStyle = "bold"
+                } else if (value === "Tardanza Severa") {
+                    hookData.cell.styles.fillColor = [254, 202, 202] // red-200
+                    hookData.cell.styles.textColor = [185, 28, 28]   // red-700
+                    hookData.cell.styles.fontStyle = "bold"
+                }
+            }
         }
     })
+
+    // Page numbers (added after table render so total page count is final)
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.setFontSize(8)
+        doc.setTextColor(100, 116, 139)
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: "right" })
+    }
 
     doc.save(`${title.replace(/\s+/g, "_")}.pdf`)
 }
@@ -341,7 +388,7 @@ export async function generatePDF(data: ShiftExportData[], title: string, logoBa
 /**
  * Generates PDF for monthly summary using jspdf
  */
-export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[], title: string, logoBase64?: string) {
+export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[], title: string, logoBase64?: string, period?: string) {
     const { jsPDF } = await import("jspdf")
     const autoTable = (await import("jspdf-autotable")).default
 
@@ -361,10 +408,27 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
     doc.setTextColor(30, 41, 59)
     doc.text(title, 14, 22)
 
-    // Subheader
+    // Subheader: generation date + optional period
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139)
-    doc.text(`Fecha de generación: ${new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })}`, 14, 30)
+    const generationDate = new Date().toLocaleDateString("es-AR", { timeZone: ARG_TIMEZONE })
+    const subheader = period
+        ? `Fecha de generación: ${generationDate}  ·  Período: ${period}`
+        : `Fecha de generación: ${generationDate}`
+    doc.text(subheader, 14, 30)
+
+    // Totals row across all doctors
+    const totalsRow = [
+        "TOTAL",
+        summaries.reduce((s, x) => s + x.totalShifts, 0).toString(),
+        summaries.reduce((s, x) => s + x.confirmedShifts, 0).toString(),
+        summaries.reduce((s, x) => s + x.dayShifts, 0).toString(),
+        summaries.reduce((s, x) => s + x.nightShifts, 0).toString(),
+        summaries.reduce((s, x) => s + x.weekendShifts, 0).toString(),
+        summaries.reduce((s, x) => s + x.totalHours, 0).toFixed(2),
+        summaries.reduce((s, x) => s + x.tardanzas, 0).toString(),
+        summaries.reduce((s, x) => s + x.tardanzasSeveras, 0).toString(),
+    ]
 
     // Table
     autoTable(doc, {
@@ -381,10 +445,23 @@ export async function generateMonthlySummaryPDF(summaries: DoctorMonthlySummary[
             s.tardanzas.toString(),
             s.tardanzasSeveras.toString()
         ]),
+        foot: [totalsRow],
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [37, 99, 235], textColor: 255 }, // blue-600
         alternateRowStyles: { fillColor: [248, 250, 252] },
+        footStyles: { fillColor: [203, 213, 225], textColor: [15, 23, 42], fontStyle: "bold" }, // slate-300 bg, slate-900 text
     })
+
+    // Page numbers
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i)
+        doc.setFontSize(8)
+        doc.setTextColor(100, 116, 139)
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
+        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 14, pageHeight - 8, { align: "right" })
+    }
 
     doc.save(`${title.replace(/\s+/g, "_")}.pdf`)
 }

@@ -131,6 +131,10 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                 console.warn("Logo could not be loaded for PDF", e)
             }
 
+            const periodStr = dateFrom && dateTo
+                ? `${format(dateFrom, "dd/MM/yyyy")} – ${format(dateTo, "dd/MM/yyyy")}`
+                : undefined
+
             if (exportFormat === "csv") {
                 if (reportType === "detailed") {
                     const exportData = formatShiftDataForExport(filteredShifts, doctors)
@@ -147,10 +151,10 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
             } else {
                 if (reportType === "detailed") {
                     const exportData = formatShiftDataForExport(filteredShifts, doctors)
-                    await generatePDF(exportData, title, logoBase64)
+                    await generatePDF(exportData, title, logoBase64, periodStr)
                 } else {
                     const summaries = generateMonthlySummary(filteredShifts, doctors)
-                    await generateMonthlySummaryPDF(summaries, title, logoBase64)
+                    await generateMonthlySummaryPDF(summaries, title, logoBase64, periodStr)
                 }
                 toast.success(`Reporte PDF exportado con éxito`)
             }

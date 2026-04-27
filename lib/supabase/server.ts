@@ -29,6 +29,10 @@ export async function getSupabaseServerClient() {
 
 export async function getSupabaseAdminClient() {
   const { createClient } = await import("@supabase/supabase-js")
+  // TEMP DEBUG: confirm runtime is loading the expected env values
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  console.log("[supabase admin] url host:", url?.replace(/^https?:\/\//, "").split(".")[0], "| key len:", key?.length, "| key prefix:", key?.slice(0, 6), "| key suffix:", key?.slice(-6))
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,

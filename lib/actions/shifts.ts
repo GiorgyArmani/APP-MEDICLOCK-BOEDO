@@ -70,7 +70,12 @@ export async function getShiftsByDateRange(dateFrom: string, dateTo: string): Pr
       .range(page * pageSize, (page + 1) * pageSize - 1)
 
     if (error) {
-      console.error("Error fetching shifts by date range:", error)
+      console.error("Error fetching shifts by date range:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      })
       return allShifts.length > 0 ? allShifts : []
     }
 
