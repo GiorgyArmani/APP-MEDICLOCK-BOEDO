@@ -3,12 +3,14 @@
 import type { Shift } from "@/lib/supabase/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, CheckCircle2, Clock, Users } from "lucide-react"
+import { useT } from "@/lib/i18n/language-provider"
 
 interface StatsCardsProps {
   shifts: Shift[]
 }
 
 export function StatsCards({ shifts }: StatsCardsProps) {
+  const t = useT()
   const stats = {
     total: shifts.length,
     new: shifts.filter((s) => s.status === "new").length,
@@ -18,28 +20,28 @@ export function StatsCards({ shifts }: StatsCardsProps) {
 
   const cards = [
     {
-      title: "Total Guardias",
+      title: t("stats.total"),
       value: stats.total,
       icon: Calendar,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
-      title: "Nuevas Asignadas",
+      title: t("stats.new"),
       value: stats.new,
       icon: Clock,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
-      title: "Libres Disponibles",
+      title: t("stats.free"),
       value: stats.free,
       icon: Users,
       color: "text-cyan-600",
       bgColor: "bg-cyan-50",
     },
     {
-      title: "Confirmadas",
+      title: t("stats.confirmed"),
       value: stats.confirmed,
       icon: CheckCircle2,
       color: "text-green-600",

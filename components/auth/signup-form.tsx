@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { useT } from "@/lib/i18n/language-provider"
 
 export function SignupForm() {
+  const t = useT()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,43 +40,43 @@ export function SignupForm() {
   return (
     <form action={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="fullName">Nombre completo</Label>
+        <Label htmlFor="fullName">{t("signup.fullName")}</Label>
         <Input
           id="fullName"
           name="fullName"
-          placeholder="Dr. Juan Pérez"
+          placeholder={t("signup.fullNamePlaceholder")}
           required
           disabled={isLoading}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="phoneNumber">Número de teléfono</Label>
+        <Label htmlFor="phoneNumber">{t("signup.phoneNumber")}</Label>
         <Input
           id="phoneNumber"
           name="phoneNumber"
           type="tel"
-          placeholder="+54 9 11 1234-5678"
+          placeholder={t("signup.phonePlaceholder")}
           required
           disabled={isLoading}
         />
-        <p className="text-xs text-muted-foreground">Para notificaciones de WhatsApp</p>
+        <p className="text-xs text-muted-foreground">{t("signup.phoneHint")}</p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Correo electrónico</Label>
+        <Label htmlFor="email">{t("common.email")}</Label>
         <Input
           id="email"
           name="email"
           type="email"
-          placeholder="doctor@clinica.com"
+          placeholder={t("signup.emailPlaceholder")}
           required
           disabled={isLoading}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Contraseña</Label>
+        <Label htmlFor="password">{t("common.password")}</Label>
         <Input
           id="password"
           name="password"
@@ -84,7 +86,7 @@ export function SignupForm() {
           disabled={isLoading}
           minLength={6}
         />
-        <p className="text-xs text-muted-foreground">Debe tener al menos 6 caracteres</p>
+        <p className="text-xs text-muted-foreground">{t("signup.passwordHint")}</p>
       </div>
 
       {error && (
@@ -94,13 +96,13 @@ export function SignupForm() {
       )}
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Creando cuenta..." : "Registrarse"}
+        {isLoading ? t("signup.submitting") : t("signup.submit")}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        ¿Ya tienes cuenta?{" "}
+        {t("common.alreadyHaveAccount")}{" "}
         <Link href="/login" className="text-primary hover:underline font-medium">
-          Iniciar sesión
+          {t("signup.signIn")}
         </Link>
       </p>
     </form>

@@ -40,7 +40,7 @@ export default async function AdminMyShiftsPage() {
         <div className="min-h-screen bg-slate-50">
             <main className="container mx-auto px-4 py-8 space-y-8 pt-20 lg:pt-8">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
+                    <div className="p-2 bg-primary rounded-lg">
                         <Clock className="h-6 w-6 text-white" />
                     </div>
                     <div>

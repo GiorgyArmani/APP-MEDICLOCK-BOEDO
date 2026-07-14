@@ -3,6 +3,7 @@
 import type { Shift, Doctor } from "@/lib/supabase/types"
 import { ShiftCard } from "@/components/dashboard/shift-card"
 import { Clock, CalendarCheck } from "lucide-react"
+import { useT } from "@/lib/i18n/language-provider"
 
 interface TodayShiftsProps {
     shifts: Shift[]
@@ -10,6 +11,7 @@ interface TodayShiftsProps {
 }
 
 export function TodayShifts({ shifts, currentDoctor }: TodayShiftsProps) {
+    const t = useT()
     // Get today's date in YYYY-MM-DD format (local time)
     const today = new Date()
     const year = today.getFullYear()
@@ -31,10 +33,10 @@ export function TodayShifts({ shifts, currentDoctor }: TodayShiftsProps) {
                     <Clock className="h-5 w-5 text-emerald-600" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900">
-                    Guardias de Hoy
+                    {t("todayShifts.title")}
                 </h2>
                 <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                    En Curso
+                    {t("todayShifts.inProgress")}
                 </span>
             </div>
 

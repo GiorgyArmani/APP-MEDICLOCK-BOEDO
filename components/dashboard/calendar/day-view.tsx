@@ -2,6 +2,8 @@
 
 import { parseShiftTime, getShiftStatusColor, getVisualShiftsForDate, getShiftAreaStyles, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift, Doctor } from "@/lib/supabase/types"
+import { useLanguage } from "@/lib/i18n/language-provider"
+import { intlLocales } from "@/lib/i18n/config"
 
 interface DayViewProps {
     currentDate: Date
@@ -11,6 +13,7 @@ interface DayViewProps {
 }
 
 export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewProps) {
+    const { t, locale } = useLanguage()
     const hours = Array.from({ length: 24 }, (_, i) => i) // 0 to 23
     const [now, setNow] = useState(new Date())
 
@@ -112,13 +115,13 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
             {/* Header */}
             <div className="flex flex-col border-b border-slate-100 bg-white/80 backdrop-blur-md px-4 py-4 sm:px-8 sm:py-6">
                 <h2 className="text-xl sm:text-3xl font-bold text-slate-800 capitalize mb-1">
-                    {currentDate.toLocaleDateString("es-ES", { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {currentDate.toLocaleDateString(intlLocales[locale], { weekday: 'long', day: 'numeric', month: 'long' })}
                 </h2>
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                        {rawSegments.length} {rawSegments.length === 1 ? 'Guardia' : 'Guardias'}
+                        {rawSegments.length} {rawSegments.length === 1 ? t("calendar.guardiaSingular") : t("calendar.guardiaPlural")}
                     </span>
-                    <span className="text-sm text-slate-400 font-medium">programadas para hoy</span>
+                    <span className="text-sm text-slate-400 font-medium">{t("calendar.scheduledToday")}</span>
                 </div>
             </div>
 
@@ -203,7 +206,7 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
                                         <div>
                                             <div className="flex items-center justify-between gap-2 mb-2">
                                                 <span className="text-sm font-black text-slate-800">
-                                                    {isContinuation ? 'Continúa...' : shift.shift_hours}
+                                                    {isContinuation ? t("calendar.continues") : shift.shift_hours}
                                                 </span>
                                                 <div className={`w-3 h-3 rounded-full shrink-0 border-2 border-white shadow-sm ${getShiftStatusIndicatorColor(shift.status || 'new')}`} />
                                             </div>
@@ -212,8 +215,8 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
                                             </div>
                                             <div className="text-xs font-bold text-slate-700 bg-slate-100/80 px-2 py-1 rounded inline-block max-w-full">
                                                 {shift.doctor_id && doctors
-                                                    ? doctors.find(d => d.id === shift.doctor_id)?.full_name || "Médico"
-                                                    : "LIBRE"}
+                                                    ? doctors.find(d => d.id === shift.doctor_id)?.full_name || t("calendar.doctor")
+                                                    : t("calendar.free")}
                                             </div>
                                         </div>
 
@@ -235,7 +238,7 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
                         {rawSegments.length === 0 && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
                                 <span className="text-5xl mb-4 text-slate-100">📅</span>
-                                <p className="font-bold text-lg">No hay guardias para este día</p>
+                                <p className="font-bold text-lg">{t("calendar.noShiftsDay")}</p>
                             </div>
                         )}
                     </div>

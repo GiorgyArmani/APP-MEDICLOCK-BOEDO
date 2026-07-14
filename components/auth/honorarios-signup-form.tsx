@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { useT } from "@/lib/i18n/language-provider"
 
 export function HonorariosSignupForm() {
+    const t = useT()
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -37,42 +39,42 @@ export function HonorariosSignupForm() {
     return (
         <form action={onSubmit} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre completo</Label>
+                <Label htmlFor="fullName">{t("honorariosSignup.fullName")}</Label>
                 <Input
                     id="fullName"
                     name="fullName"
-                    placeholder="Ej: Lic. María García"
+                    placeholder={t("honorariosSignup.fullNamePlaceholder")}
                     required
                     disabled={isLoading}
                 />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Número de teléfono</Label>
+                <Label htmlFor="phoneNumber">{t("honorariosSignup.phoneNumber")}</Label>
                 <Input
                     id="phoneNumber"
                     name="phoneNumber"
                     type="tel"
-                    placeholder="+54 9 11 1234-5678"
+                    placeholder={t("honorariosSignup.phonePlaceholder")}
                     required
                     disabled={isLoading}
                 />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico profesional</Label>
+                <Label htmlFor="email">{t("honorariosSignup.emailLabel")}</Label>
                 <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="audit@clinica.com"
+                    placeholder={t("honorariosSignup.emailPlaceholder")}
                     required
                     disabled={isLoading}
                 />
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
+                <Label htmlFor="password">{t("common.password")}</Label>
                 <Input
                     id="password"
                     name="password"
@@ -82,7 +84,7 @@ export function HonorariosSignupForm() {
                     disabled={isLoading}
                     minLength={6}
                 />
-                <p className="text-xs text-muted-foreground">Debe tener al menos 6 caracteres</p>
+                <p className="text-xs text-muted-foreground">{t("honorariosSignup.passwordHint")}</p>
             </div>
 
             {error && (
@@ -92,13 +94,13 @@ export function HonorariosSignupForm() {
             )}
 
             <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={isLoading}>
-                {isLoading ? "Creando cuenta de Auditor..." : "Registrarse como Auditor"}
+                {isLoading ? t("honorariosSignup.submitting") : t("honorariosSignup.submit")}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-                ¿Ya tienes cuenta?{" "}
+                {t("common.alreadyHaveAccount")}{" "}
                 <Link href="/login" className="text-primary hover:underline font-medium">
-                    Iniciar sesión
+                    {t("honorariosSignup.signIn")}
                 </Link>
             </p>
         </form>

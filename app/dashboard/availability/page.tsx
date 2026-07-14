@@ -4,6 +4,7 @@ import { getAvailability } from "@/lib/actions/availability"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AvailabilityCalendar } from "@/components/availability/availability-calendar"
 import { Calendar, Info } from "lucide-react"
+import { T } from "@/components/i18n/t"
 
 export default async function AvailabilityPage() {
     const doctor = await getCurrentDoctor()
@@ -17,8 +18,8 @@ export default async function AvailabilityPage() {
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div>
-                <h1 className="text-3xl font-bold text-slate-900">Mi Disponibilidad</h1>
-                <p className="text-slate-600">Configura tu disponibilidad semanal para guardias</p>
+                <h1 className="text-3xl font-bold text-slate-900"><T k="availabilityPage.title" /></h1>
+                <p className="text-slate-600"><T k="availabilityPage.subtitle" /></p>
             </div>
 
             <div className="grid gap-6">
@@ -27,11 +28,8 @@ export default async function AvailabilityPage() {
                         <div className="flex items-start gap-3">
                             <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                             <div className="text-sm text-blue-900">
-                                <p className="font-medium mb-1">¿Cómo funciona?</p>
-                                <p>
-                                    Configura los días y horarios en los que estás disponible para guardias. El
-                                    administrador podrá ver tu disponibilidad al asignar guardias.
-                                </p>
+                                <p className="font-medium mb-1"><T k="availabilityPage.howItWorksTitle" /></p>
+                                <p><T k="availabilityPage.howItWorksBody" /></p>
                             </div>
                         </div>
                     </CardContent>
@@ -41,10 +39,10 @@ export default async function AvailabilityPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Calendar className="h-5 w-5" />
-                            Horario Semanal
+                            <T k="availabilityPage.weeklySchedule" />
                         </CardTitle>
                         <CardDescription>
-                            Haz clic en un día para agregar o editar tu disponibilidad
+                            <T k="availabilityPage.clickDayHint" />
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

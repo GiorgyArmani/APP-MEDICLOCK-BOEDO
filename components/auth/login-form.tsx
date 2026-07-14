@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
+import { useT } from "@/lib/i18n/language-provider"
 
 export function LoginForm() {
+  const t = useT()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,12 +37,12 @@ export function LoginForm() {
   return (
     <form action={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Correo electrónico</Label>
+        <Label htmlFor="email">{t("common.email")}</Label>
         <Input
           id="email"
           name="email"
           type="email"
-          placeholder="doctor@clinica.com"
+          placeholder={t("login.emailPlaceholder")}
           required
           disabled={isLoading}
         />
@@ -48,12 +50,12 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="password">Contraseña</Label>
+          <Label htmlFor="password">{t("common.password")}</Label>
           <Link
             href="/forgot-password"
             className="text-sm font-medium text-primary hover:underline text-muted-foreground hover:text-primary"
           >
-            ¿Olvidaste tu contraseña?
+            {t("login.forgotPassword")}
           </Link>
         </div>
         <Input
@@ -73,7 +75,7 @@ export function LoginForm() {
       )}
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Iniciando sesión..." : "Iniciar sesión"}
+        {isLoading ? t("login.submitting") : t("login.submit")}
       </Button>
 
 

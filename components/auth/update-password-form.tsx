@@ -15,11 +15,13 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n/language-provider";
 
 export function UpdatePasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const t = useT();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function UpdatePasswordForm({
 
         if (error) {
           console.error('Error setting session:', error);
-          setError('Invalid or expired reset link. Please request a new password reset.');
+          setError(t("updatePassword.invalidLink"));
           setSessionChecked(true);
           return;
         }
@@ -62,7 +64,7 @@ export function UpdatePasswordForm({
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        setError('No active session found. Please request a new password reset link.');
+        setError(t("updatePassword.noSession"));
       } else {
         console.log('✅ Valid session found for password reset');
       }
@@ -77,12 +79,12 @@ export function UpdatePasswordForm({
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("updatePassword.passwordsDoNotMatch"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError(t("updatePassword.passwordTooShort"));
       return;
     }
 
@@ -96,7 +98,7 @@ export function UpdatePasswordForm({
       if (error) throw error;
 
       console.log('✅ Password updated successfully');
-      toast.success("Password updated successfully!");
+      toast.success(t("updatePassword.success"));
 
       // Redirect to login page
       setTimeout(() => {
@@ -105,7 +107,7 @@ export function UpdatePasswordForm({
 
     } catch (error: unknown) {
       console.error('❌ Password update error:', error);
-      setError(error instanceof Error ? error.message : "An error occurred while updating your password");
+      setError(error instanceof Error ? error.message : t("updatePassword.updateError"));
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +118,7 @@ export function UpdatePasswordForm({
       <div className={cn("flex flex-col gap-6", className)} {...props}>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Verifying reset link...</p>
+            <p className="text-center text-muted-foreground">{t("updatePassword.verifying")}</p>
           </CardContent>
         </Card>
       </div>
@@ -127,20 +129,20 @@ export function UpdatePasswordForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+          <CardTitle className="text-2xl">{t("updatePassword.title")}</CardTitle>
           <CardDescription>
-            Please enter your new password below.
+            {t("updatePassword.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handlePasswordUpdate}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">{t("updatePassword.newPassword")}</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter new password"
+                  placeholder={t("updatePassword.newPasswordPlaceholder")}
                   required
                   minLength={6}
                   value={password}
@@ -149,11 +151,11 @@ export function UpdatePasswordForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm password</Label>
+                <Label htmlFor="confirmPassword">{t("updatePassword.confirmPassword")}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder={t("updatePassword.confirmPasswordPlaceholder")}
                   required
                   minLength={6}
                   value={confirmPassword}
@@ -167,7 +169,7 @@ export function UpdatePasswordForm({
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading || !!error}>
-                {isLoading ? "Updating password..." : "Update password"}
+                {isLoading ? t("updatePassword.submitting") : t("updatePassword.submit")}
               </Button>
               {error && (
                 <Button
@@ -176,7 +178,7 @@ export function UpdatePasswordForm({
                   className="w-full"
                   onClick={() => router.push("/auth/forgot-password")}
                 >
-                  Request new reset link
+                  {t("updatePassword.requestNewLink")}
                 </Button>
               )}
             </div>

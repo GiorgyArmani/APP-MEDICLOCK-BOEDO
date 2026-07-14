@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useT } from "@/lib/i18n/language-provider";
 
 export default function SetPasswordPage() {
+  const t = useT();
   const supabase = createClient();
   const router = useRouter();
 
@@ -58,8 +60,8 @@ export default function SetPasswordPage() {
     e.preventDefault();
     setErr(null);
 
-    if (pwd1.length < 8) return setErr("Password must be at least 8 characters.");
-    if (pwd1 !== pwd2) return setErr("Passwords do not match.");
+    if (pwd1.length < 8) return setErr(t("setPassword.tooShort"));
+    if (pwd1 !== pwd2) return setErr(t("setPassword.doNotMatch"));
 
     setSubmitting(true);
     const { error } = await supabase.auth.updateUser({
@@ -77,7 +79,7 @@ export default function SetPasswordPage() {
   if (loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center text-gray-600">
-        Loading…
+        {t("common.loading")}
       </div>
     );
   }
@@ -86,23 +88,23 @@ export default function SetPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Set your password</CardTitle>
+          <CardTitle>{t("setPassword.title")}</CardTitle>
           <CardDescription>
-            {email ? <>Account for <b>{email}</b></> : "You're authenticated via a secure link."}
+            {email ? <>{t("setPassword.accountFor")} <b>{email}</b></> : t("setPassword.secureLink")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!mustSet ? (
             <div className="text-sm text-gray-700">
-              Your password is already set. Continue to your{" "}
-              <a className="underline" href="/dashboard">dashboard</a>.
+              {t("setPassword.alreadySet")}{" "}
+              <a className="underline" href="/dashboard">{t("setPassword.dashboard")}</a>.
             </div>
           ) : ok ? (
-            <div className="text-emerald-700">Password updated. Redirecting…</div>
+            <div className="text-emerald-700">{t("setPassword.updatedRedirecting")}</div>
           ) : (
             <form onSubmit={onSubmit} className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="pwd1">New password</Label>
+                <Label htmlFor="pwd1">{t("setPassword.newPassword")}</Label>
                 <Input
                   id="pwd1"
                   type="password"
@@ -113,7 +115,7 @@ export default function SetPasswordPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="pwd2">Repeat password</Label>
+                <Label htmlFor="pwd2">{t("setPassword.repeatPassword")}</Label>
                 <Input
                   id="pwd2"
                   type="password"
@@ -125,10 +127,10 @@ export default function SetPasswordPage() {
               </div>
               {err && <p className="text-sm text-red-600">{err}</p>}
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Saving…" : "Save password"}
+                {submitting ? t("setPassword.submitting") : t("setPassword.submit")}
               </Button>
               <p className="text-xs text-gray-500">
-                Minimum 8 characters. You’ll be redirected to your dashboard after saving.
+                {t("setPassword.hint")}
               </p>
             </form>
           )}

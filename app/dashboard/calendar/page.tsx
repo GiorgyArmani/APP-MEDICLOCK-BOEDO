@@ -4,6 +4,7 @@ import { getDoctorShiftsByDateRange } from "@/lib/actions/shifts"
 import { DoctorCalendar } from "@/components/dashboard/doctor-calendar"
 import { Calendar } from "lucide-react"
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
+import { T } from "@/components/i18n/t"
 import type { Shift, Doctor } from "@/lib/supabase/types"
 
 interface DoctorCalendarPageProps {
@@ -56,12 +57,12 @@ export default async function DoctorCalendarPage({ searchParams }: DoctorCalenda
         <div className="min-h-screen bg-slate-50 pt-20 lg:pt-8 px-4 pb-8">
             <div className="container mx-auto space-y-6">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
+                    <div className="p-2 bg-primary rounded-lg">
                         <Calendar className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Mi Calendario</h1>
-                        <p className="text-sm text-slate-600">Visualiza tus guardias y las disponibles en formato calendario</p>
+                        <h1 className="text-2xl font-bold text-slate-900"><T k="calendarPage.title" /></h1>
+                        <p className="text-sm text-slate-600"><T k="calendarPage.subtitle" /></p>
                     </div>
                 </div>
 

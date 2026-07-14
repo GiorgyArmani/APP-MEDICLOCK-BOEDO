@@ -45,7 +45,7 @@ export default async function AdminCalendarPage({ searchParams }: AdminCalendarP
             <div className="container mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-600 rounded-lg">
+                        <div className="p-2 bg-primary rounded-lg">
                             <Calendar className="h-6 w-6 text-white" />
                         </div>
                         <div>

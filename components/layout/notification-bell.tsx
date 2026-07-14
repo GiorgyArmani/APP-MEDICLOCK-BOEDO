@@ -14,10 +14,11 @@ import { Badge } from "@/components/ui/badge"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
-import { es } from "date-fns/locale"
+import { es, enUS } from "date-fns/locale"
 import { useEffect, useCallback } from "react"
 import { getCurrentDoctor } from "@/lib/actions/auth"
 import type { Doctor } from "@/lib/supabase/types"
+import { useLanguage } from "@/lib/i18n/language-provider"
 
 interface NotificationBellProps {
     doctorId?: string
@@ -25,6 +26,8 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ doctorId, recipientRole }: NotificationBellProps) {
+    const { locale, t } = useLanguage()
+    const dateLocale = locale === "en" ? enUS : es
     const [isMounted, setIsMounted] = useState(false)
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(doctorId, recipientRole)
     const [open, setOpen] = useState(false)
@@ -80,7 +83,7 @@ export function NotificationBell({ doctorId, recipientRole }: NotificationBellPr
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
                 <div className="flex items-center justify-between px-2 py-2">
-                    <h3 className="font-semibold text-sm">Notificaciones</h3>
+                    <h3 className="font-semibold text-sm">{t("notifications.title")}</h3>
                     {unreadCount > 0 && (
                         <Button
                             variant="ghost"
@@ -89,7 +92,7 @@ export function NotificationBell({ doctorId, recipientRole }: NotificationBellPr
                             className="h-7 text-xs"
                         >
                             <CheckCheck className="h-3 w-3 mr-1" />
-                            Marcar todas
+                            {t("notifications.markAll")}
                         </Button>
                     )}
                 </div>
@@ -97,21 +100,21 @@ export function NotificationBell({ doctorId, recipientRole }: NotificationBellPr
                 <div className="max-h-[400px] overflow-y-auto">
                     {notifications.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                            No hay notificaciones
+                            {t("notifications.empty")}
                         </div>
                     ) : (
                         notifications.map((notification) => (
                             <DropdownMenuItem
                                 key={notification.id}
-                                className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${!notification.read ? "bg-blue-50 hover:bg-blue-100" : ""
+                                className={`flex flex-col items-start gap-1 p-3 cursor-pointer ${!notification.read ? "bg-primary/10 hover:bg-primary/15" : ""
                                     }`}
                                 onClick={() => handleNotificationClick(notification)}
                             >
                                 <div className="flex items-start justify-between w-full gap-2">
                                     <div className="flex-1">
                                         <p className="text-sm font-medium leading-tight">
-                                            {notification.type === "free_shift_available" && "🆓 Nueva Guardia Libre"}
-                                            {notification.type === "new_chat_message" && "💬 Nuevo Mensaje"}
+                                            {notification.type === "free_shift_available" && t("notifications.freeShift")}
+                                            {notification.type === "new_chat_message" && t("notifications.newMessage")}
                                         </p>
                                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                             {notification.message}
@@ -119,12 +122,12 @@ export function NotificationBell({ doctorId, recipientRole }: NotificationBellPr
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {formatDistanceToNow(new Date(notification.created_at), {
                                                 addSuffix: true,
-                                                locale: es,
+                                                locale: dateLocale,
                                             })}
                                         </p>
                                     </div>
                                     {!notification.read && (
-                                        <div className="h-2 w-2 rounded-full bg-blue-600 flex-shrink-0 mt-1" />
+                                        <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
                                     )}
                                 </div>
                             </DropdownMenuItem>

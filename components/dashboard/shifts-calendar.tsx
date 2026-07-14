@@ -12,6 +12,8 @@ import { MonthView } from "./calendar/month-view"
 import { WeekView } from "./calendar/week-view"
 import { DayView } from "./calendar/day-view"
 import { ShiftsFilter } from "@/components/admin/shifts-filter"
+import { useLanguage } from "@/lib/i18n/language-provider"
+import { intlLocales } from "@/lib/i18n/config"
 
 interface ShiftsCalendarProps {
   shifts: Shift[]
@@ -26,6 +28,7 @@ interface ShiftsCalendarProps {
 
 
 export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initialDate, onMonthNavigate, ...props }: ShiftsCalendarProps) {
+  const { t, locale } = useLanguage()
   const [currentDate, setCurrentDate] = useState(initialDate ?? new Date())
   const [view, setView] = useState<"month" | "week" | "day">("month")
 
@@ -128,23 +131,23 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
           {/* View Legend */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6">
             <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm lg:w-fit flex-1 sm:flex-none">
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">Área de Trabajo</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">{t("calendar.workArea")}</span>
               <div className="flex flex-wrap gap-3 sm:gap-5">
-                <StatusBadge color="bg-purple-500" label="Consultorio" dot={false} bar={true} />
-                <StatusBadge color="bg-blue-500" label="Internación" dot={false} bar={true} />
-                <StatusBadge color="bg-orange-500" label="Refuerzo" dot={false} bar={true} />
-                <StatusBadge color="bg-indigo-500" label="Piso" dot={false} bar={true} />
+                <StatusBadge color="bg-purple-500" label={t("shift.areaConsultorio")} dot={false} bar={true} />
+                <StatusBadge color="bg-blue-500" label={t("shift.areaInternacion")} dot={false} bar={true} />
+                <StatusBadge color="bg-orange-500" label={t("shift.areaRefuerzo")} dot={false} bar={true} />
+                <StatusBadge color="bg-indigo-500" label={t("shift.areaPiso")} dot={false} bar={true} />
               </div>
             </div>
 
             <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm lg:w-fit flex-1 sm:flex-none">
-              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">Estado de Guardia</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">{t("calendar.shiftStatus")}</span>
               <div className="flex flex-wrap gap-3 sm:gap-5">
-                <StatusBadge color="bg-blue-400" label="Nueva" />
-                <StatusBadge color="bg-amber-400" label="Libre" />
-                <StatusBadge color="bg-emerald-400" label="Confirmada" />
-                <StatusBadge color="bg-rose-400" label="Rechazada" />
-                <StatusBadge color="bg-orange-400" label="Pendiente +12h" />
+                <StatusBadge color="bg-blue-400" label={t("shift.statusNew")} />
+                <StatusBadge color="bg-amber-400" label={t("shift.statusFree")} />
+                <StatusBadge color="bg-emerald-400" label={t("shift.statusConfirmed")} />
+                <StatusBadge color="bg-rose-400" label={t("shift.statusRejected")} />
+                <StatusBadge color="bg-orange-400" label={t("shift.statusPending")} />
               </div>
             </div>
           </div>
@@ -187,7 +190,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
           <DialogHeader>
             <DialogTitle className="text-xl capitalize">
               {selectedShifts.length > 0 &&
-                new Date(selectedShifts[0].shift_date + "T00:00:00").toLocaleDateString("es-ES", {
+                new Date(selectedShifts[0].shift_date + "T00:00:00").toLocaleDateString(intlLocales[locale], {
                   weekday: "long",
                   year: "numeric",
                   month: "long",
@@ -196,7 +199,7 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
               }
             </DialogTitle>
             <DialogDescription>
-              {selectedShifts.length} {selectedShifts.length === 1 ? "guardia" : "guardias"}
+              {selectedShifts.length} {selectedShifts.length === 1 ? t("calendar.guardiaSingular") : t("calendar.guardiaPlural")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">

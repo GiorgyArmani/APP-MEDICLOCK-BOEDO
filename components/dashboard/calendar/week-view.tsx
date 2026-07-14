@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react"
 import { getWeekDays, parseShiftTime, getShiftStatusColor, getVisualShiftsForDate, getShiftAreaStyles, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift, Doctor } from "@/lib/supabase/types"
+import { useLanguage } from "@/lib/i18n/language-provider"
+import { intlLocales } from "@/lib/i18n/config"
 
 interface WeekViewProps {
     currentDate: Date
@@ -11,6 +13,7 @@ interface WeekViewProps {
 }
 
 export function WeekView({ currentDate, shifts, onDayClick, onShiftClick, doctors }: WeekViewProps) {
+    const { t, locale } = useLanguage()
     const weekDays = getWeekDays(currentDate)
     const hours = Array.from({ length: 24 }, (_, i) => i) // 0 to 23
     const [now, setNow] = useState(new Date())
@@ -47,7 +50,7 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick, doctor
                             return (
                                 <div key={i} className={`py-4 text-center transition-all ${isToday ? 'bg-blue-50/30' : ''}`}>
                                     <div className={`text-[10px] font-bold uppercase mb-1 tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}`}>
-                                        {day.toLocaleDateString("es-ES", { weekday: 'short' }).replace('.', '').slice(0, 3)}
+                                        {day.toLocaleDateString(intlLocales[locale], { weekday: 'short' }).replace('.', '').slice(0, 3)}
                                     </div>
                                     <div className={`text-xl font-bold w-10 h-10 flex items-center justify-center mx-auto rounded-full transition-all duration-300 ${isToday ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-600 hover:bg-slate-50'}`}>
                                         {day.getDate()}
@@ -189,7 +192,7 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick, doctor
                                                             <div>
                                                                 <div className="flex items-center justify-between gap-1 mb-1">
                                                                     <span className="text-[11px] font-bold text-slate-700 truncate">
-                                                                        {isContinuation ? 'Continúa...' : shift.shift_hours}
+                                                                        {isContinuation ? t("calendar.continues") : shift.shift_hours}
                                                                     </span>
                                                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getShiftStatusIndicatorColor(shift.status || 'new')}`} />
                                                                 </div>
@@ -198,8 +201,8 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick, doctor
                                                                 </div>
                                                                 <div className="text-[10px] font-bold text-slate-600 truncate bg-slate-100/50 px-1 rounded inline-block max-w-full">
                                                                     {shift.doctor_id && doctors
-                                                                        ? doctors.find(d => d.id === shift.doctor_id)?.full_name || "Médico"
-                                                                        : "LIBRE"}
+                                                                        ? doctors.find(d => d.id === shift.doctor_id)?.full_name || t("calendar.doctor")
+                                                                        : t("calendar.free")}
                                                                 </div>
                                                             </div>
 

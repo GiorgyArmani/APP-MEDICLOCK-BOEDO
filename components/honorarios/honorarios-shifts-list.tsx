@@ -81,8 +81,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
         <div className="space-y-8">
             {/* Stats Cards */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="relative overflow-hidden border-none shadow-md group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
+                <Card className="relative overflow-hidden border border-blue-100 border-l-4 border-l-blue-500 bg-blue-50/50 shadow-sm group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Filtrado</CardTitle>
                         <div className="p-2 bg-blue-50 rounded-xl">
@@ -95,8 +95,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-md group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
+                <Card className="relative overflow-hidden border border-amber-100 border-l-4 border-l-amber-500 bg-amber-50/50 shadow-sm group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Pendientes</CardTitle>
                         <div className="p-2 bg-amber-50 rounded-xl">
@@ -109,8 +109,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-md group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
+                <Card className="relative overflow-hidden border border-green-100 border-l-4 border-l-green-500 bg-green-50/50 shadow-sm group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Confirmadas</CardTitle>
                         <div className="p-2 bg-green-50 rounded-xl">
@@ -123,8 +123,8 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                     </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-none shadow-md group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
+                <Card className="relative overflow-hidden border border-indigo-100 border-l-4 border-l-indigo-500 bg-indigo-50/50 shadow-sm group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Médicos</CardTitle>
                         <div className="p-2 bg-indigo-50 rounded-xl">
@@ -165,7 +165,7 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                             <CardDescription>Consulta el calendario y lista detallada de guardias</CardDescription>
                         </div>
                         <Link href="/honorarios/reports">
-                            <Button className="bg-blue-600 hover:bg-blue-700 gap-2">
+                            <Button className="bg-primary hover:bg-primary/90 gap-2">
                                 <Download className="h-4 w-4" />
                                 Generar Reporte
                             </Button>

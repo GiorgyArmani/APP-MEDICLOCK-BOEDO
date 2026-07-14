@@ -435,7 +435,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                     <Button
                         onClick={() => handleExport("pdf")}
                         disabled={filteredShifts.length === 0}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-12 text-base font-semibold"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-12 text-base font-semibold"
                     >
                         <Download className="h-5 w-5" />
                         PDF Reporte

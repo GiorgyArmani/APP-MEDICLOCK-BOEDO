@@ -7,6 +7,7 @@ import { TodayShifts } from "@/components/dashboard/today-shifts"
 import { ShiftsCalendar } from "@/components/dashboard/shifts-calendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, List } from "lucide-react"
+import { T } from "@/components/i18n/t"
 import type { Shift, Doctor } from "@/lib/supabase/types"
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
 
@@ -53,9 +54,9 @@ export default async function DashboardPage() {
       <main className="container mx-auto px-4 py-8 space-y-8 pt-20 lg:pt-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            Bienvenido, Dr. {doctor.full_name.split(" ")[1] || doctor.full_name}
+            <T k="dashboardHome.greeting" vars={{ name: doctor.full_name.split(" ")[1] || doctor.full_name }} />
           </h1>
-          <p className="text-slate-600">Gestiona tus guardias y horarios</p>
+          <p className="text-slate-600"><T k="dashboardHome.subtitle" /></p>
         </div>
 
         <TodayShifts shifts={visibleShifts} currentDoctor={doctor} />
@@ -66,7 +67,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-slate-900 flex items-center gap-2">
               <List className="h-5 w-5 text-slate-600" />
-              Lista de Guardias
+              <T k="dashboardHome.shiftsListHeading" />
             </h2>
           </div>
           <ShiftsList shifts={visibleShifts} currentDoctor={doctor} />

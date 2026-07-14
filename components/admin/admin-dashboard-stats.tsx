@@ -45,7 +45,7 @@ function KpiCard({
 
     return (
         <div className="relative overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-sm p-4 sm:p-5 group hover:shadow-md transition-shadow">
-            <div className={`absolute inset-0 opacity-[0.04] group-hover:opacity-[0.07] transition-opacity bg-gradient-to-br ${color}`} />
+            <div className={`absolute inset-0 opacity-[0.1] group-hover:opacity-[0.15] transition-opacity bg-gradient-to-br ${color}`} />
             <div className="flex items-start justify-between mb-3">
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
                 <div className={`p-1.5 sm:p-2 rounded-xl bg-gradient-to-br ${color} bg-opacity-10 shadow-sm`}>

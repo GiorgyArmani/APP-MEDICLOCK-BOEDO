@@ -2,6 +2,9 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { cookies } from "next/headers"
+import { LanguageProvider } from "@/lib/i18n/language-provider"
+import { defaultLocale, isLocale, LOCALE_COOKIE } from "@/lib/i18n/config"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -25,17 +28,23 @@ export const metadata: Metadata = {
 
 import { Toaster } from "sonner"
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value
+  const locale = isLocale(cookieLocale) ? cookieLocale : defaultLocale
+
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
-        {children}
-        <Toaster position="top-right" richColors />
-        <Analytics />
+        <LanguageProvider initialLocale={locale}>
+          {children}
+          <Toaster position="top-right" richColors />
+          <Analytics />
+        </LanguageProvider>
       </body>
     </html>
   )

@@ -2,6 +2,7 @@
 
 import { generateCalendarDays, getShiftStatusColor, getShiftAreaColor, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift, Doctor } from "@/lib/supabase/types"
+import { useT } from "@/lib/i18n/language-provider"
 
 interface MonthViewProps {
     currentDate: Date
@@ -11,8 +12,9 @@ interface MonthViewProps {
 }
 
 export function MonthView({ currentDate, shifts, onDayClick, doctors }: MonthViewProps) {
+    const t = useT()
     const days = generateCalendarDays(currentDate.getFullYear(), currentDate.getMonth())
-    const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    const dayNames = [t("calendar.dayShort0"), t("calendar.dayShort1"), t("calendar.dayShort2"), t("calendar.dayShort3"), t("calendar.dayShort4"), t("calendar.dayShort5"), t("calendar.dayShort6")]
 
     const getShiftsForDay = (date: Date) => {
         const dateStr = date.toISOString().split('T')[0]
@@ -77,7 +79,7 @@ export function MonthView({ currentDate, shifts, onDayClick, doctors }: MonthVie
                                                 <div
                                                     key={shift.id}
                                                     className={`relative text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 sm:py-1 rounded-[3px] shadow-sm flex items-center gap-1 font-semibold truncate hover:opacity-90 transition-opacity ${pillStyle}`}
-                                                    title={`${shift.shift_hours} - ${shift.doctor_id && doctors ? doctors.find(d => d.id === shift.doctor_id)?.full_name : "LIBRE"}`}
+                                                    title={`${shift.shift_hours} - ${shift.doctor_id && doctors ? doctors.find(d => d.id === shift.doctor_id)?.full_name : t("calendar.free")}`}
                                                 >
                                                     <div className={`hidden sm:block w-1.5 h-1.5 rounded-full shrink-0 ${getShiftStatusIndicatorColor(shift.status || 'new')} border border-white/30`} />
                                                     <span className="truncate flex-1 leading-tight tracking-tight text-center sm:text-left">{shift.shift_hours}</span>
@@ -86,7 +88,7 @@ export function MonthView({ currentDate, shifts, onDayClick, doctors }: MonthVie
                                         })}
                                         {dayShifts.length > 4 && (
                                             <div className="text-[7px] sm:text-[9px] text-slate-400 font-black px-1 pt-0.5 tracking-tight text-center sm:text-left truncate">
-                                                +{dayShifts.length - 4} <span className="hidden sm:inline">ADICIONALES</span>
+                                                +{dayShifts.length - 4} <span className="hidden sm:inline">{t("calendar.more")}</span>
                                             </div>
                                         )}
                                     </div>

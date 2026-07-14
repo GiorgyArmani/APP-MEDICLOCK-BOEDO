@@ -5,6 +5,7 @@ import { ShiftsList } from "@/components/dashboard/shifts-list"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, addMonths } from "date-fns"
+import { T } from "@/components/i18n/t"
 import type { Shift } from "@/lib/supabase/types"
 
 export default async function ShiftsPage() {
@@ -35,25 +36,25 @@ export default async function ShiftsPage() {
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div>
-                <h1 className="text-3xl font-bold text-slate-900">Mis Guardias</h1>
-                <p className="text-slate-600">Gestiona tus guardias asignadas y disponibles</p>
+                <h1 className="text-3xl font-bold text-slate-900"><T k="shiftsPage.title" /></h1>
+                <p className="text-slate-600"><T k="shiftsPage.subtitle" /></p>
             </div>
 
             <Tabs defaultValue="assigned" className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2">
-                    <TabsTrigger value="assigned">Mis Guardias ({myShifts.length})</TabsTrigger>
-                    <TabsTrigger value="available">Disponibles ({freeShifts.length})</TabsTrigger>
+                    <TabsTrigger value="assigned"><T k="shiftsPage.tabAssigned" /> ({myShifts.length})</TabsTrigger>
+                    <TabsTrigger value="available"><T k="shiftsPage.tabAvailable" /> ({freeShifts.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="assigned" className="mt-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Guardias Asignadas</CardTitle>
-                            <CardDescription>Guardias que te han sido asignadas</CardDescription>
+                            <CardTitle><T k="shiftsPage.assignedTitle" /></CardTitle>
+                            <CardDescription><T k="shiftsPage.assignedDesc" /></CardDescription>
                         </CardHeader>
                         <CardContent>
                             {myShifts.length === 0 ? (
-                                <p className="text-center text-slate-500 py-8">No tienes guardias asignadas</p>
+                                <p className="text-center text-slate-500 py-8"><T k="shiftsPage.emptyAssigned" /></p>
                             ) : (
                                 <ShiftsList shifts={myShifts} currentDoctor={doctor} />
                             )}
@@ -64,13 +65,13 @@ export default async function ShiftsPage() {
                 <TabsContent value="available" className="mt-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Guardias Disponibles</CardTitle>
-                            <CardDescription>Guardias libres que puedes aceptar</CardDescription>
+                            <CardTitle><T k="shiftsPage.availableTitle" /></CardTitle>
+                            <CardDescription><T k="shiftsPage.availableDesc" /></CardDescription>
                         </CardHeader>
                         <CardContent>
                             {freeShifts.length === 0 ? (
                                 <p className="text-center text-slate-500 py-8">
-                                    No hay guardias disponibles en este momento
+                                    <T k="shiftsPage.emptyAvailable" />
                                 </p>
                             ) : (
                                 <ShiftsList shifts={freeShifts} currentDoctor={doctor} />

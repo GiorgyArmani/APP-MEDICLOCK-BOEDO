@@ -8,12 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ShiftCard } from "./shift-card"
 import { AdminShiftCard } from "@/components/admin/admin-shift-card"
 import { Loader2 } from "lucide-react"
+import { useT } from "@/lib/i18n/language-provider"
 
 interface ShiftViewModalProps {
     currentDoctor: Doctor
 }
 
 export function ShiftViewModal({ currentDoctor }: ShiftViewModalProps) {
+    const t = useT()
     const { viewingShiftId, setViewingShiftId } = useSidebar()
     const [shift, setShift] = useState<Shift | null>(null)
     const [doctors, setDoctors] = useState<Doctor[]>([])
@@ -69,9 +71,9 @@ export function ShiftViewModal({ currentDoctor }: ShiftViewModalProps) {
         <Dialog open={!!viewingShiftId} onOpenChange={handleOpenChange}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Detalles de la Guardia</DialogTitle>
+                    <DialogTitle>{t("shiftModal.title")}</DialogTitle>
                     <DialogDescription>
-                        Visualiza y gestiona la información de esta guardia.
+                        {t("shiftModal.description")}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -95,7 +97,7 @@ export function ShiftViewModal({ currentDoctor }: ShiftViewModalProps) {
                         )
                     ) : (
                         <div className="text-center py-8 text-slate-500">
-                            No se pudo cargar la información de la guardia.
+                            {t("shiftModal.empty")}
                         </div>
                     )}
                 </div>
