@@ -15,6 +15,9 @@ import { ReassignShiftDialog } from "./reassign-shift-dialog"
 import { DeleteShiftDialog } from "./delete-shift-dialog"
 import { updateShiftStatus, acceptFreeShift, clockIn, clockOut, saveDoctorNotes } from "@/lib/actions/shifts"
 import { toast } from "sonner"
+import { UserAvatar } from "@/components/layout/user-avatar"
+import { cn } from "@/lib/utils"
+import { useClockLocation } from "@/lib/geo/use-clock-location"
 
 interface AdminShiftCardProps {
     shift: Shift
@@ -26,6 +29,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
     const [isPending, startTransition] = useTransition()
     const [doctorNotes, setDoctorNotes] = useState(shift.doctor_notes || "")
     const router = useRouter()
+    const { locate, errorMessage } = useClockLocation()
     const [editOpen, setEditOpen] = useState(false)
     const [reassignOpen, setReassignOpen] = useState(false)
     const [deleteOpen, setDeleteOpen] = useState(false)
@@ -61,9 +65,10 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
     const handleClockIn = async () => {
         if (!doctorId) return
         startTransition(async () => {
-            const result = await clockIn(shift.id, doctorId)
+            const { coords, geoError } = await locate()
+            const result = await clockIn(shift.id, doctorId, coords)
             if (result.error) {
-                toast.error(`Error: ${result.error}`)
+                toast.error(`Error: ${errorMessage(result, geoError)}`)
             } else {
                 toast.success(result.message || "Entrada registrada exitosamente")
                 router.refresh()
@@ -74,9 +79,10 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
     const handleClockOut = async () => {
         if (!doctorId) return
         startTransition(async () => {
-            const result = await clockOut(shift.id, doctorId)
+            const { coords, geoError } = await locate()
+            const result = await clockOut(shift.id, doctorId, coords)
             if (result.error) {
-                toast.error(`Error: ${result.error}`)
+                toast.error(`Error: ${errorMessage(result, geoError)}`)
             } else {
                 toast.success("Salida registrada exitosamente")
                 router.refresh()
@@ -100,16 +106,24 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
     const statusColors = {
         new: "bg-blue-100 text-blue-800 border-blue-200",
         free: "bg-cyan-100 text-cyan-800 border-cyan-200",
-        confirmed: "bg-green-100 text-green-800 border-green-200",
+        confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
         rejected: "bg-red-100 text-red-800 border-red-200",
         free_pending: "bg-amber-100 text-amber-800 border-amber-200",
     }
 
     const areaColors = {
-        consultorio: "bg-blue-50 text-blue-700 border-blue-200",
-        internacion: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        refuerzo: "bg-orange-50 text-orange-700 border-orange-200",
-        piso: "bg-indigo-50 text-indigo-700 border-indigo-200",
+        consultorio: "bg-white text-slate-700 border-slate-300",
+        internacion: "bg-white text-slate-700 border-slate-300",
+        refuerzo: "bg-white text-slate-700 border-slate-300",
+        piso: "bg-white text-slate-700 border-slate-300",
+    }
+
+    const statusAccent: Record<string, string> = {
+        new: "border-l-blue-600",
+        free: "border-l-cyan-600",
+        confirmed: "border-l-emerald-500",
+        rejected: "border-l-red-500",
+        free_pending: "border-l-amber-500",
     }
 
     const formatDate = (dateStr: string) => {
@@ -126,12 +140,12 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
 
     return (
         <>
-            <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
+            <Card className={cn("border-l-4 py-0 transition-shadow duration-200 hover:shadow-md", statusAccent[shift.status])}>
+                <CardContent className="p-5 sm:p-6">
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                <h3 className="text-lg font-semibold text-slate-900">{shiftLabel}</h3>
+                                <h3 className="text-lg font-bold tracking-tight text-slate-900">{shiftLabel}</h3>
                                 <Badge className={statusColors[shift.status as keyof typeof statusColors]}>
                                     {shift.status === "new"
                                         ? "Nueva"
@@ -150,21 +164,22 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                                     const today = new Date()
                                     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
                                     return shift.shift_date === todayStr && (
-                                        <Badge className="bg-emerald-600 text-white border-emerald-700 shadow-sm animate-pulse">
+                                        <Badge className="bg-emerald-600 text-white border-emerald-700 shadow-sm motion-safe:animate-pulse">
                                             HOY
                                         </Badge>
                                     )
                                 })()}
                             </div>
                             {assignedDoctor && (
-                                <p className="text-sm text-slate-600">
-                                    <span className="font-medium">Médico:</span> {assignedDoctor.full_name}
+                                <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
+                                    <UserAvatar name={assignedDoctor.full_name} className="h-6 w-6 text-[10px] ring-0" />
+                                    <span className="font-semibold">{assignedDoctor.full_name}</span>
                                 </p>
                             )}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 rounded-xl bg-slate-50 p-3">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                             <MapPin className="h-4 w-4 text-slate-400" />
                             <Badge className={areaColors[shift.shift_area === "completo" ? "consultorio" : (shift.shift_area as keyof typeof areaColors)]}>
@@ -179,16 +194,16 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                             <Clock className="h-4 w-4 text-slate-400" />
-                            <span className="font-medium">{shift.shift_hours}</span>
+                            <span className="font-semibold tabular-nums text-slate-800">{shift.shift_hours}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600 md:col-span-2">
                             <Calendar className="h-4 w-4 text-slate-400" />
-                            <span>{formatDate(shift.shift_date)}</span>
+                            <span className="first-letter:uppercase">{formatDate(shift.shift_date)}</span>
                         </div>
                     </div>
 
                     {(shift.clock_in || shift.clock_out) && (
-                        <div className="mt-2 pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 mb-4">
+                        <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 p-3 tabular-nums">
                             <div className="text-xs">
                                 <span className="font-semibold text-emerald-700 block uppercase">Entrada</span>
                                 {shift.clock_in ? new Date(shift.clock_in).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "-"}
@@ -201,7 +216,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                     )}
 
                     {shift.notes && (
-                        <div className="mb-4 p-3 bg-slate-50 rounded-md">
+                        <div className="mb-4 rounded-xl border border-slate-200 p-3">
                             <p className="text-sm text-slate-700">
                                 <span className="font-medium">Notas:</span> {shift.notes}
                             </p>
@@ -209,8 +224,8 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                     )}
 
                     {shift.doctor_notes && !isAssignedToMe && (
-                        <div className="mb-4 p-3 bg-yellow-50 rounded-md border border-yellow-200">
-                            <p className="text-sm text-yellow-900">
+                        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                            <p className="text-sm text-amber-900">
                                 <span className="font-medium">Notas del Médico:</span> {shift.doctor_notes}
                             </p>
                         </div>
@@ -224,7 +239,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                                     <Button
                                         onClick={() => handleStatusUpdate("confirmed")}
                                         disabled={isPending}
-                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                        className="h-10 flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
                                         size="sm"
                                     >
                                         <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -235,7 +250,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                                         disabled={isPending}
                                         variant="destructive"
                                         size="sm"
-                                        className="flex-1"
+                                        className="h-10 flex-1 rounded-xl"
                                     >
                                         <XCircle className="h-4 w-4 mr-2" />
                                         Rechazar
@@ -249,7 +264,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                                         <Button
                                             onClick={handleClockIn}
                                             disabled={isPending}
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                                            className="h-11 w-full rounded-xl bg-emerald-600 font-semibold text-white hover:bg-emerald-700"
                                         >
                                             <Clock className="h-4 w-4 mr-2" />
                                             Marcar Entrada (Check-In)
@@ -260,7 +275,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                                         <Button
                                             onClick={handleClockOut}
                                             disabled={isPending}
-                                            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                                            className="h-11 w-full rounded-xl font-semibold"
                                         >
                                             <Clock className="h-4 w-4 mr-2" />
                                             Marcar Salida (Check-Out)
@@ -298,7 +313,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                             <Button
                                 onClick={handleAcceptFreeShift}
                                 disabled={isPending}
-                                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+                                className="h-11 w-full rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white"
                             >
                                 <CheckCircle2 className="h-4 w-4 mr-2" />
                                 Tomar Esta Guardia
@@ -312,7 +327,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                             onClick={() => setEditOpen(true)}
                             variant="outline"
                             size="sm"
-                            className="flex-1 min-w-[80px]"
+                            className="h-9 flex-1 min-w-[80px] rounded-lg"
                         >
                             <Edit className="h-3.5 w-3.5 mr-1.5" />
                             Editar
@@ -321,7 +336,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                             onClick={() => setReassignOpen(true)}
                             variant="outline"
                             size="sm"
-                            className="flex-1 min-w-[80px]"
+                            className="h-9 flex-1 min-w-[80px] rounded-lg"
                         >
                             <UserCog className="h-3.5 w-3.5 mr-1.5" />
                             Reasignar
@@ -330,7 +345,7 @@ export function AdminShiftCard({ shift, doctors, currentDoctor }: AdminShiftCard
                             onClick={() => setDeleteOpen(true)}
                             variant="outline"
                             size="sm"
-                            className="flex-1 min-w-[80px] border-red-200 text-red-600 hover:bg-red-50"
+                            className="h-9 flex-1 min-w-[80px] rounded-lg border-red-200 text-red-600 hover:bg-red-50"
                         >
                             <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                             Eliminar

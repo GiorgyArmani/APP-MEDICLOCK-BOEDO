@@ -133,10 +133,10 @@ export function ShiftsCalendar({ shifts, currentDoctor, readOnly = false, initia
             <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm lg:w-fit flex-1 sm:flex-none">
               <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 sm:mb-3 block">{t("calendar.workArea")}</span>
               <div className="flex flex-wrap gap-3 sm:gap-5">
-                <StatusBadge color="bg-purple-500" label={t("shift.areaConsultorio")} dot={false} bar={true} />
-                <StatusBadge color="bg-blue-500" label={t("shift.areaInternacion")} dot={false} bar={true} />
+                <StatusBadge color="bg-blue-500" label={t("shift.areaConsultorio")} dot={false} bar={true} />
+                <StatusBadge color="bg-cyan-500" label={t("shift.areaInternacion")} dot={false} bar={true} />
                 <StatusBadge color="bg-orange-500" label={t("shift.areaRefuerzo")} dot={false} bar={true} />
-                <StatusBadge color="bg-indigo-500" label={t("shift.areaPiso")} dot={false} bar={true} />
+                <StatusBadge color="bg-blue-900" label={t("shift.areaPiso")} dot={false} bar={true} />
               </div>
             </div>
 

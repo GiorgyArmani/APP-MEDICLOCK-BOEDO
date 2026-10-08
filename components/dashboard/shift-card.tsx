@@ -16,6 +16,8 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/lib/i18n/language-provider"
 import { intlLocales } from "@/lib/i18n/config"
+import { useClockLocation } from "@/lib/geo/use-clock-location"
+import { GEOFENCE_ENABLED } from "@/lib/geo/config"
 
 interface ShiftCardProps {
   shift: Shift
@@ -27,6 +29,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
   const [isPending, startTransition] = useTransition()
   const [doctorNotes, setDoctorNotes] = useState(shift.doctor_notes || "")
   const router = useRouter()
+  const { locate, errorMessage } = useClockLocation()
 
   const handleStatusUpdate = async (status: "confirmed" | "rejected") => {
     startTransition(async () => {
@@ -78,9 +81,10 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
 
   const handleClockIn = async () => {
     startTransition(async () => {
-      const result = await clockIn(shift.id, doctorId)
+      const { coords, geoError } = await locate()
+      const result = await clockIn(shift.id, doctorId, coords)
       if (result.error) {
-        toast.error(`Error: ${result.error}`)
+        toast.error(`Error: ${errorMessage(result, geoError)}`)
       } else {
         toast.success(result.message || t("shift.toastClockIn"))
         router.refresh()
@@ -90,9 +94,10 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
 
   const handleClockOut = async () => {
     startTransition(async () => {
-      const result = await clockOut(shift.id, doctorId)
+      const { coords, geoError } = await locate()
+      const result = await clockOut(shift.id, doctorId, coords)
       if (result.error) {
-        toast.error(`Error: ${result.error}`)
+        toast.error(`Error: ${errorMessage(result, geoError)}`)
       } else {
         toast.success(t("shift.toastClockOut"))
         router.refresh()
@@ -115,21 +120,21 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
   const statusColors = {
     new: "bg-blue-100 text-blue-800 border-blue-200",
     free: "bg-cyan-100 text-cyan-800 border-cyan-200",
-    confirmed: "bg-green-100 text-green-800 border-green-200",
+    confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
     rejected: "bg-red-100 text-red-800 border-red-200",
     free_pending: "bg-amber-100 text-amber-800 border-amber-200",
   }
 
   const typeColors = {
-    assigned: "bg-purple-100 text-purple-800 border-purple-200",
+    assigned: "bg-slate-100 text-slate-700 border-slate-200",
     free: "bg-cyan-100 text-cyan-800 border-cyan-200",
   }
 
   const areaColors = {
-    consultorio: "bg-blue-50 text-blue-700 border-blue-200",
-    internacion: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    refuerzo: "bg-orange-50 text-orange-700 border-orange-200",
-    piso: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    consultorio: "bg-white text-slate-700 border-slate-300",
+    internacion: "bg-white text-slate-700 border-slate-300",
+    refuerzo: "bg-white text-slate-700 border-slate-300",
+    piso: "bg-white text-slate-700 border-slate-300",
   }
 
   const formatDate = (dateStr: string) => {
@@ -140,6 +145,14 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
   const shiftTypeInfo = SHIFT_TYPES.find((st) => st.value === shift.shift_category)
   const shiftLabel = shiftTypeInfo?.label || shift.shift_category
 
+  const statusAccent: Record<string, string> = {
+    new: "border-l-blue-600",
+    free: "border-l-cyan-600",
+    confirmed: "border-l-emerald-500",
+    rejected: "border-l-red-500",
+    free_pending: "border-l-amber-500",
+  }
+
   const canAcceptFreeShift = (shift.status === "free" || shift.status === "free_pending")
   const isAssignedToMe = shift.doctor_id === doctorId
 
@@ -147,15 +160,15 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
     <Card
       id={`shift-${shift.id}`}
       className={cn(
-        "transition-all duration-200",
-        "hover:shadow-md transition-shadow"
+        "border-l-4 py-0 transition-shadow duration-200 hover:shadow-md",
+        statusAccent[shift.status]
       )}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-5 sm:p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h3 className="text-lg font-semibold text-slate-900">{shiftLabel}</h3>
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">{shiftLabel}</h3>
               <Badge className={statusColors[shift.status]}>
                 {shift.status === "new"
                   ? t("shift.statusNew")
@@ -181,7 +194,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
                 const today = new Date()
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
                 return shift.shift_date === todayStr && (
-                  <Badge className="bg-emerald-600 text-white border-emerald-700 shadow-sm animate-pulse">
+                  <Badge className="bg-emerald-600 text-white border-emerald-700 shadow-sm motion-safe:animate-pulse">
                     {t("shift.today")}
                   </Badge>
                 )
@@ -190,7 +203,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 rounded-xl bg-slate-50 p-3">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <MapPin className="h-4 w-4 text-slate-400" />
             <Badge className={areaColors[shift.shift_area === "completo" ? "consultorio" : (shift.shift_area as keyof typeof areaColors)]}>
@@ -205,16 +218,16 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <Clock className="h-4 w-4 text-slate-400" />
-            <span className="font-medium">{shift.shift_hours}</span>
+            <span className="font-semibold tabular-nums text-slate-800">{shift.shift_hours}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-600 md:col-span-2">
             <Calendar className="h-4 w-4 text-slate-400" />
-            <span>{formatDate(shift.shift_date)}</span>
+            <span className="first-letter:uppercase">{formatDate(shift.shift_date)}</span>
           </div>
         </div>
 
         {shift.notes && (
-          <div className="mb-4 p-3 bg-slate-50 rounded-md">
+          <div className="mb-4 rounded-xl border border-slate-200 p-3">
             <p className="text-sm text-slate-700">
               <span className="font-medium">{t("shift.notesLabel")}</span> {shift.notes}
             </p>
@@ -226,12 +239,12 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
             <Button
               onClick={() => handleStatusUpdate("confirmed")}
               disabled={isPending}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="h-11 flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               {t("shift.confirm")}
             </Button>
-            <Button onClick={handleRejectToFree} disabled={isPending} variant="destructive" className="flex-1">
+            <Button onClick={handleRejectToFree} disabled={isPending} variant="destructive" className="h-11 flex-1 rounded-xl">
               <XCircle className="h-4 w-4 mr-2" />
               {t("shift.rejectRelease")}
             </Button>
@@ -262,11 +275,17 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
                     <Button
                       onClick={handleClockIn}
                       disabled={isPending || !isAllowed}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className="h-12 w-full rounded-xl bg-emerald-600 text-base font-semibold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700"
                     >
                       <Clock className="h-4 w-4 mr-2" />
                       {t("shift.checkin")}
                     </Button>
+                    {GEOFENCE_ENABLED && (
+                      <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {t("geo.notice")}
+                      </p>
+                    )}
                   </div>
                 )
               }
@@ -280,13 +299,13 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
                         {t("shift.checkoutNear")}
                       </p>
                     )}
-                    <div className="text-sm text-center text-emerald-700 font-medium bg-emerald-50 p-2 rounded">
+                    <div className="rounded-xl bg-emerald-50 p-2.5 text-center text-sm font-semibold text-emerald-800">
                       {t("shift.clockInLabel")} {new Date(shift.clock_in).toLocaleTimeString(intlLocales[locale], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <Button
                       onClick={handleClockOut}
                       disabled={isPending || !isAllowed}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      className="h-12 w-full rounded-xl text-base font-semibold"
                     >
                       <Clock className="h-4 w-4 mr-2" />
                       {t("shift.checkout")}
@@ -298,7 +317,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
             })()}
 
             {shift.clock_in && shift.clock_out && (
-              <div className="grid grid-cols-2 gap-2 text-sm text-center bg-slate-50 p-2 rounded">
+              <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-center text-sm font-semibold tabular-nums">
                 <div className="text-emerald-700">
                   <span className="block text-xs font-semibold uppercase">{t("shift.entrada")}</span>
                   {new Date(shift.clock_in).toLocaleTimeString(intlLocales[locale], { hour: '2-digit', minute: '2-digit' })}
@@ -334,7 +353,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
               onClick={handleCancelShift}
               disabled={isPending}
               variant="outline"
-              className="w-full border-orange-300 text-orange-700 hover:bg-orange-50"
+              className="h-11 w-full rounded-xl border-orange-300 text-orange-700 hover:bg-orange-50"
             >
               <XCircle className="h-4 w-4 mr-2" />
               {t("shift.cancelShift")}
@@ -347,7 +366,7 @@ export function ShiftCard({ shift, doctorId }: ShiftCardProps) {
             <Button
               onClick={handleAcceptFreeShift}
               disabled={isPending}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
+              className="h-11 flex-1 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               {t("shift.acceptShift")}

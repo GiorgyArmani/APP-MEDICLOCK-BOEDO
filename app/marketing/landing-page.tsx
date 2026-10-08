@@ -31,7 +31,6 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { useT } from "@/lib/i18n/language-provider"
 import type { TPath } from "@/lib/i18n/dictionaries"
 import { cn } from "@/lib/utils"
-import { figtree } from "./fonts"
 import {
   AdminWeekMock,
   BrowserFrame,
@@ -659,7 +658,7 @@ function Footer() {
 export function LandingPage() {
   const t = useT()
   return (
-    <div className={cn(figtree.className, "flex min-h-dvh flex-col overflow-x-clip bg-[#f6f7f9] text-slate-900 antialiased")}>
+    <div className={cn("flex min-h-dvh flex-col overflow-x-clip bg-[#f6f7f9] text-slate-900 antialiased")}>
       <a
         href="#contenido"
         className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4"

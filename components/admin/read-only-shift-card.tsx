@@ -3,6 +3,8 @@
 import type { Shift, Doctor } from "@/lib/supabase/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { UserAvatar } from "@/components/layout/user-avatar"
+import { cn } from "@/lib/utils"
 import { Calendar, Clock, MapPin } from "lucide-react"
 import { SHIFT_TYPES } from "@/lib/constants/shift-types"
 
@@ -15,17 +17,17 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
     const statusColors = {
         new: "bg-blue-100 text-blue-800 border-blue-200",
         free: "bg-cyan-100 text-cyan-800 border-cyan-200",
-        confirmed: "bg-green-100 text-green-800 border-green-200",
+        confirmed: "bg-emerald-100 text-emerald-800 border-emerald-200",
         rejected: "bg-red-100 text-red-800 border-red-200",
         free_pending: "bg-amber-100 text-amber-800 border-amber-200",
     }
 
     const areaColors = {
-        consultorio: "bg-blue-50 text-blue-700 border-blue-200",
-        internacion: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        refuerzo: "bg-orange-50 text-orange-700 border-orange-200",
-        piso: "bg-indigo-50 text-indigo-700 border-indigo-200",
-        completo: "bg-purple-50 text-purple-700 border-purple-200",
+        consultorio: "bg-white text-slate-700 border-slate-300",
+        internacion: "bg-white text-slate-700 border-slate-300",
+        refuerzo: "bg-white text-slate-700 border-slate-300",
+        piso: "bg-white text-slate-700 border-slate-300",
+        completo: "bg-white text-slate-700 border-slate-300",
     }
 
     const formatDate = (dateStr: string) => {
@@ -38,13 +40,21 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
 
     const assignedDoctor = shift.doctor_id ? doctors.find((d) => d.id === shift.doctor_id) : null
 
+    const statusAccent: Record<string, string> = {
+        new: "border-l-blue-600",
+        free: "border-l-cyan-600",
+        confirmed: "border-l-emerald-500",
+        rejected: "border-l-red-500",
+        free_pending: "border-l-amber-500",
+    }
+
     return (
-        <Card className="border-slate-200/60 shadow-sm">
-            <CardContent className="p-6">
+        <Card className={cn("border-l-4 py-0 transition-shadow duration-200 hover:shadow-md", statusAccent[shift.status])}>
+            <CardContent className="p-5 sm:p-6">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2 flex-wrap">
-                            <h3 className="text-lg font-semibold text-slate-900">{shiftLabel}</h3>
+                            <h3 className="text-lg font-bold tracking-tight text-slate-900">{shiftLabel}</h3>
                             <Badge className={statusColors[shift.status as keyof typeof statusColors]}>
                                 {shift.status === "new"
                                     ? "Nueva"
@@ -61,14 +71,15 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
                             </Badge>
                         </div>
                         {assignedDoctor && (
-                            <p className="text-sm text-slate-600">
-                                <span className="font-medium text-slate-900">Médico:</span> {assignedDoctor.full_name}
+                            <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
+                                <UserAvatar name={assignedDoctor.full_name} className="h-6 w-6 text-[10px] ring-0" />
+                                <span className="font-semibold">{assignedDoctor.full_name}</span>
                             </p>
                         )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 rounded-xl bg-slate-50 p-3">
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                         <MapPin className="h-4 w-4 text-slate-400" />
                         <Badge className={areaColors[shift.shift_area === "completo" ? "consultorio" : (shift.shift_area as keyof typeof areaColors)]}>
@@ -83,11 +94,11 @@ export function ReadOnlyShiftCard({ shift, doctors }: ReadOnlyShiftCardProps) {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Clock className="h-4 w-4 text-slate-400" />
-                        <span className="font-medium text-slate-900">{shift.shift_hours}</span>
+                        <span className="font-semibold tabular-nums text-slate-800">{shift.shift_hours}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-600 md:col-span-2">
                         <Calendar className="h-4 w-4 text-slate-400" />
-                        <span>{formatDate(shift.shift_date)}</span>
+                        <span className="first-letter:uppercase">{formatDate(shift.shift_date)}</span>
                     </div>
                 </div>
 

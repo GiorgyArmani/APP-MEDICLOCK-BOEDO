@@ -2,6 +2,7 @@
 
 import { parseShiftTime, getShiftStatusColor, getVisualShiftsForDate, getShiftAreaStyles, getShiftStatusIndicatorColor } from "@/lib/utils/calendar"
 import type { Shift, Doctor } from "@/lib/supabase/types"
+import { CalendarX } from "lucide-react"
 import { useLanguage } from "@/lib/i18n/language-provider"
 import { intlLocales } from "@/lib/i18n/config"
 
@@ -173,10 +174,10 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
                             const height = durationHours * HOUR_HEIGHT
 
                             const areaColors: Record<string, string> = {
-                                consultorio: 'border-purple-500',
-                                internacion: 'border-blue-500',
+                                consultorio: 'border-blue-500',
+                                internacion: 'border-cyan-500',
                                 refuerzo: 'border-orange-500',
-                                piso: 'border-indigo-500'
+                                piso: 'border-blue-900'
                             }
                             const accentColor = areaColors[shift.shift_area] || 'border-slate-500'
 
@@ -237,7 +238,7 @@ export function DayView({ currentDate, shifts, onShiftClick, doctors }: DayViewP
 
                         {rawSegments.length === 0 && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
-                                <span className="text-5xl mb-4 text-slate-100">📅</span>
+                                <CalendarX className="mb-4 h-12 w-12 text-slate-200" aria-hidden />
                                 <p className="font-bold text-lg">{t("calendar.noShiftsDay")}</p>
                             </div>
                         )}

@@ -119,8 +119,8 @@ export function ShiftsFilter({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los turnos</SelectItem>
-                            <SelectItem value="dia">🌞 Día</SelectItem>
-                            <SelectItem value="noche">🌙 Noche</SelectItem>
+                            <SelectItem value="dia">Día</SelectItem>
+                            <SelectItem value="noche">Noche</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -138,8 +138,8 @@ export function ShiftsFilter({
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Todos los días</SelectItem>
-                            <SelectItem value="semana">📅 Semana</SelectItem>
-                            <SelectItem value="finde">🎉 Fin de Semana</SelectItem>
+                            <SelectItem value="semana">Semana</SelectItem>
+                            <SelectItem value="finde">Fin de Semana</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

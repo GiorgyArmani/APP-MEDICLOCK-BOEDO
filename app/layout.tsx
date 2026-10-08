@@ -1,15 +1,17 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Figtree, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { cookies } from "next/headers"
 import { LanguageProvider } from "@/lib/i18n/language-provider"
 import { defaultLocale, isLocale, LOCALE_COOKIE } from "@/lib/i18n/config"
 import "./globals.css"
 
-const geistSans = Geist({
+// Humanist sans used across the app and the landing (healthcare, legible at small sizes).
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  display: "swap",
+  variable: "--font-figtree",
 })
 
 const geistMono = Geist_Mono({
@@ -22,7 +24,11 @@ export const metadata: Metadata = {
   description: "Gestiona las guardias médicas con control de acceso basado en roles",
   generator: "Next.js",
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 }
 
@@ -39,7 +45,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${figtree.variable} ${geistMono.variable} font-sans antialiased`}>
         <LanguageProvider initialLocale={locale}>
           {children}
           <Toaster position="top-right" richColors />

@@ -63,6 +63,16 @@ export interface Database {
           recurrence_id: string | null
           clock_in: string | null
           clock_out: string | null
+          clock_in_lat: number | null
+          clock_in_lng: number | null
+          clock_in_accuracy: number | null
+          clock_in_distance_m: number | null
+          clock_in_location_id: string | null
+          clock_out_lat: number | null
+          clock_out_lng: number | null
+          clock_out_accuracy: number | null
+          clock_out_distance_m: number | null
+          clock_out_location_id: string | null
           doctor_notes: string | null
         }
         Insert: {
@@ -82,6 +92,16 @@ export interface Database {
           recurrence_id?: string | null
           clock_in?: string | null
           clock_out?: string | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_in_accuracy?: number | null
+          clock_in_distance_m?: number | null
+          clock_in_location_id?: string | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          clock_out_accuracy?: number | null
+          clock_out_distance_m?: number | null
+          clock_out_location_id?: string | null
           doctor_notes?: string | null
         }
         Update: {
@@ -101,6 +121,16 @@ export interface Database {
           recurrence_id?: string | null
           clock_in?: string | null
           clock_out?: string | null
+          clock_in_lat?: number | null
+          clock_in_lng?: number | null
+          clock_in_accuracy?: number | null
+          clock_in_distance_m?: number | null
+          clock_in_location_id?: string | null
+          clock_out_lat?: number | null
+          clock_out_lng?: number | null
+          clock_out_accuracy?: number | null
+          clock_out_distance_m?: number | null
+          clock_out_location_id?: string | null
           doctor_notes?: string | null
         }
         Relationships: [
@@ -294,6 +324,39 @@ export interface Database {
           }
         ]
       }
+      work_locations: {
+        Row: {
+          id: string
+          name: string
+          latitude: number
+          longitude: number
+          radius_meters: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          latitude: number
+          longitude: number
+          radius_meters?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          latitude?: number
+          longitude?: number
+          radius_meters?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {}
     Functions: {}
@@ -323,3 +386,7 @@ export type NotificationInsert = Database["public"]["Tables"]["notifications"]["
 
 export type ChatMessage = Database["public"]["Tables"]["chat_messages"]["Row"]
 export type ChatMessageInsert = Database["public"]["Tables"]["chat_messages"]["Insert"]
+
+export type WorkLocation = Database["public"]["Tables"]["work_locations"]["Row"]
+export type WorkLocationInsert = Database["public"]["Tables"]["work_locations"]["Insert"]
+export type WorkLocationUpdate = Database["public"]["Tables"]["work_locations"]["Update"]

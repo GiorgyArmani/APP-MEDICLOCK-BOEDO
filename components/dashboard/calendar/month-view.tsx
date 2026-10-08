@@ -68,10 +68,10 @@ export function MonthView({ currentDate, shifts, onDayClick, doctors }: MonthVie
                                     <div className="flex-1 space-y-0.5 sm:space-y-1 overflow-hidden pb-1">
                                         {dayShifts.slice(0, 4).map((shift) => {
                                             const solidColors: Record<string, string> = {
-                                                consultorio: 'bg-purple-500 text-white',
-                                                internacion: 'bg-blue-500 text-white',
+                                                consultorio: 'bg-blue-500 text-white',
+                                                internacion: 'bg-cyan-500 text-white',
                                                 refuerzo: 'bg-orange-500 text-white',
-                                                piso: 'bg-indigo-500 text-white'
+                                                piso: 'bg-blue-900 text-white'
                                             }
                                             const pillStyle = solidColors[shift.shift_area?.toLowerCase()] || 'bg-slate-500 text-white'
 

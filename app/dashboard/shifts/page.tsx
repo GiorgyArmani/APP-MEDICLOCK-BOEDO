@@ -36,7 +36,7 @@ export default async function ShiftsPage() {
     return (
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div>
-                <h1 className="text-3xl font-bold text-slate-900"><T k="shiftsPage.title" /></h1>
+                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900"><T k="shiftsPage.title" /></h1>
                 <p className="text-slate-600"><T k="shiftsPage.subtitle" /></p>
             </div>
 

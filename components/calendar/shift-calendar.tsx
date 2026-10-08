@@ -148,11 +148,11 @@ export function ShiftCalendar({ shifts, doctorName = "Doctor" }: ShiftCalendarPr
                 <h3 className="font-semibold mb-3">Leyenda</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-purple-500" />
+                        <div className="w-3 h-3 rounded-full bg-blue-500" />
                         <span className="text-sm">Consultorio</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500" />
+                        <div className="w-3 h-3 rounded-full bg-cyan-500" />
                         <span className="text-sm">Internación</span>
                     </div>
                     <div className="flex items-center gap-2">

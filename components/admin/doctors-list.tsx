@@ -20,7 +20,7 @@ export function DoctorsList({ doctors, shifts }: DoctorsListProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "administrator":
-        return "bg-purple-100 text-purple-700 hover:bg-purple-100"
+        return "bg-slate-900 text-white hover:bg-slate-900"
       case "doctor":
       default:
         return "bg-blue-100 text-blue-700 hover:bg-blue-100"

@@ -13,6 +13,7 @@ import { notifyFreeShift } from "@/lib/notifications/in-app"
 import { format, parseISO, subDays, addDays } from "date-fns"
 import { shiftsOverlap } from "@/lib/utils"
 import { getArgentinaValidationDates, parseShiftDateTime, getMinutesDiffFromNow } from "@/lib/utils/date-utils"
+import { checkGeofence, type GeoCoords } from "@/lib/geo/geofence"
 
 export async function getShifts(): Promise<Shift[]> {
   const supabase = await getSupabaseServerClient()
@@ -977,7 +978,7 @@ export async function getDoctorsForHonorarios(): Promise<Doctor[]> {
   return doctors as Doctor[]
 }
 
-export async function clockIn(shiftId: string, doctorId: string) {
+export async function clockIn(shiftId: string, doctorId: string, coords?: GeoCoords | null) {
   const supabase = await getSupabaseServerClient()
 
   // 1. Verify shift ownership and status
@@ -1046,13 +1047,30 @@ export async function clockIn(shiftId: string, doctorId: string) {
     }
   }
   // ---------------------------------------------
+
+  // --- CONTROL DE UBICACIÓN (GEOFENCE) ---
+  const geo = await checkGeofence(supabase, coords)
+  if (!geo.ok) {
+    return { error: geo.error, code: geo.code }
+  }
+  if (geo.enforced) {
+    notesForEvent += ` · ${geo.location.name} (a ${Math.round(geo.distance)} m, ±${Math.round(geo.coords.accuracy)} m)`
+  }
+
   const now = new Date()
 
   const { data, error } = await supabase
     .from("shifts")
     .update({
       clock_in: now.toISOString(),
-      updated_at: now.toISOString()
+      updated_at: now.toISOString(),
+      ...(geo.enforced && {
+        clock_in_lat: geo.coords.latitude,
+        clock_in_lng: geo.coords.longitude,
+        clock_in_accuracy: geo.coords.accuracy,
+        clock_in_distance_m: geo.distance,
+        clock_in_location_id: geo.location.id,
+      }),
     })
     .eq("id", shiftId)
     .select()
@@ -1076,7 +1094,7 @@ export async function clockIn(shiftId: string, doctorId: string) {
   return { data, message: returnMessage }
 }
 
-export async function clockOut(shiftId: string, doctorId: string) {
+export async function clockOut(shiftId: string, doctorId: string, coords?: GeoCoords | null) {
   const supabase = await getSupabaseServerClient()
 
   // 1. Verify shift ownership and status
@@ -1109,13 +1127,26 @@ export async function clockOut(shiftId: string, doctorId: string) {
     return { error: "El check-in y check-out solo están disponibles cerca de la fecha del turno." }
   }
 
+  // --- CONTROL DE UBICACIÓN (GEOFENCE) ---
+  const geo = await checkGeofence(supabase, coords)
+  if (!geo.ok) {
+    return { error: geo.error, code: geo.code }
+  }
+
   const now = new Date()
 
   const { data, error } = await supabase
     .from("shifts")
     .update({
       clock_out: now.toISOString(),
-      updated_at: now.toISOString()
+      updated_at: now.toISOString(),
+      ...(geo.enforced && {
+        clock_out_lat: geo.coords.latitude,
+        clock_out_lng: geo.coords.longitude,
+        clock_out_accuracy: geo.coords.accuracy,
+        clock_out_distance_m: geo.distance,
+        clock_out_location_id: geo.location.id,
+      }),
     })
     .eq("id", shiftId)
     .select()
@@ -1131,7 +1162,9 @@ export async function clockOut(shiftId: string, doctorId: string) {
     shift_id: shiftId,
     event_type: "clock_out",
     doctor_id: doctorId,
-    notes: "Salida registrada por el médico"
+    notes: geo.enforced
+      ? `Salida registrada por el médico · ${geo.location.name} (a ${Math.round(geo.distance)} m, ±${Math.round(geo.coords.accuracy)} m)`
+      : "Salida registrada por el médico"
   })
 
   revalidatePath("/dashboard")

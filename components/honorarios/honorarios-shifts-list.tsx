@@ -80,64 +80,27 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
     return (
         <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="relative overflow-hidden border border-blue-100 border-l-4 border-l-blue-500 bg-blue-50/50 shadow-sm group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Filtrado</CardTitle>
-                        <div className="p-2 bg-blue-50 rounded-xl">
-                            <CalendarIcon className="h-5 w-5 text-blue-600" />
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+                {[
+                    { title: "Total Filtrado", value: filteredShifts.length, hint: "Guardias encontradas", icon: CalendarIcon, tone: "bg-blue-50 text-blue-700" },
+                    { title: "Pendientes", value: pendingCount, hint: "En el rango seleccionado", icon: Clock, tone: "bg-amber-50 text-amber-700" },
+                    { title: "Confirmadas", value: confirmedCount, hint: "Listas para liquidar", icon: CheckCircle2, tone: "bg-emerald-50 text-emerald-700" },
+                    { title: "Médicos", value: new Set(filteredShifts.map((s) => s.doctor_id).filter(Boolean)).size, hint: "Personal en este período", icon: Users, tone: "bg-slate-100 text-slate-700" },
+                ].map(({ title, value, hint, icon: Icon, tone }) => (
+                    <div
+                        key={title}
+                        className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-5"
+                    >
+                        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
+                            <Icon className="h-5 w-5" aria-hidden />
+                        </span>
+                        <div>
+                            <p className="text-3xl font-extrabold leading-none tracking-tight text-slate-900 tabular-nums">{value}</p>
+                            <p className="mt-1.5 text-sm font-semibold text-slate-700">{title}</p>
+                            <p className="text-xs text-slate-500">{hint}</p>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-black text-slate-900">{filteredShifts.length}</div>
-                        <p className="text-xs font-semibold text-blue-600/70 mt-1">Guardias encontradas</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="relative overflow-hidden border border-amber-100 border-l-4 border-l-amber-500 bg-amber-50/50 shadow-sm group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Pendientes</CardTitle>
-                        <div className="p-2 bg-amber-50 rounded-xl">
-                            <Clock className="h-5 w-5 text-amber-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-black text-slate-900">{pendingCount}</div>
-                        <p className="text-xs font-semibold text-amber-600/70 mt-1">En el rango seleccionado</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="relative overflow-hidden border border-green-100 border-l-4 border-l-green-500 bg-green-50/50 shadow-sm group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Confirmadas</CardTitle>
-                        <div className="p-2 bg-green-50 rounded-xl">
-                            <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-black text-slate-900">{confirmedCount}</div>
-                        <p className="text-xs font-semibold text-green-600/70 mt-1">Listas para liquidar</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="relative overflow-hidden border border-indigo-100 border-l-4 border-l-indigo-500 bg-indigo-50/50 shadow-sm group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-600 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity" />
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-wider">Médicos</CardTitle>
-                        <div className="p-2 bg-indigo-50 rounded-xl">
-                            <Users className="h-5 w-5 text-indigo-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-black text-slate-900">
-                            {new Set(filteredShifts.map((s) => s.doctor_id).filter(Boolean)).size}
-                        </div>
-                        <p className="text-xs font-semibold text-indigo-600/70 mt-1">Personal en este período</p>
-                    </CardContent>
-                </Card>
+                    </div>
+                ))}
             </div>
 
             <ShiftsFilter
@@ -157,7 +120,7 @@ export function HonorariosShiftsList({ shifts, doctors }: HonorariosShiftsListPr
                 onClear={clearFilters}
             />
 
-            <Card className="border-slate-200/60 shadow-sm overflow-hidden">
+            <Card className="overflow-hidden">
                 <CardHeader className="bg-white border-b border-slate-100">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex flex-col gap-1">

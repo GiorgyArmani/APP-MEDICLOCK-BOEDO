@@ -34,35 +34,32 @@ function formatDateLabel(dateStr: string) {
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 
 function KpiCard({
-    title, value, subtitle, icon: Icon, color, pct,
+    title, value, subtitle, icon: Icon, tone, pct,
 }: {
     title: string; value: number; subtitle: string
-    icon: React.ElementType; color: string; pct?: number
+    icon: React.ElementType; tone: string; pct?: number
 }) {
     const isPositive = pct !== undefined && pct > 0
     const isNegative = pct !== undefined && pct < 0
     const isNeutral = pct === undefined || pct === 0
 
     return (
-        <div className="relative overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-sm p-4 sm:p-5 group hover:shadow-md transition-shadow">
-            <div className={`absolute inset-0 opacity-[0.1] group-hover:opacity-[0.15] transition-opacity bg-gradient-to-br ${color}`} />
-            <div className="flex items-start justify-between mb-3">
-                <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
-                <div className={`p-1.5 sm:p-2 rounded-xl bg-gradient-to-br ${color} bg-opacity-10 shadow-sm`}>
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
-                </div>
-            </div>
-            <div className="flex items-end justify-between">
-                <div>
-                    <p className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">{value.toLocaleString("es-AR")}</p>
-                    <p className="text-[10px] sm:text-xs text-slate-500 mt-1.5 font-medium">{subtitle}</p>
-                </div>
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.06)] sm:p-5">
+            <div className="flex items-start justify-between">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
+                    <Icon className="h-5 w-5" aria-hidden />
+                </span>
                 {pct !== undefined && (
-                    <div className={`flex items-center gap-1 text-[10px] sm:text-xs font-bold rounded-full px-2 py-1 ${isPositive ? "bg-emerald-50 text-emerald-700" : isNegative ? "bg-red-50 text-red-600" : "bg-slate-50 text-slate-500"}`}>
-                        {isPositive ? <TrendingUp className="h-3 w-3" /> : isNegative ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                    <span className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold ${isPositive ? "bg-emerald-50 text-emerald-700" : isNegative ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500"}`}>
+                        {isPositive ? <TrendingUp className="h-3 w-3" aria-hidden /> : isNegative ? <TrendingDown className="h-3 w-3" aria-hidden /> : <Minus className="h-3 w-3" aria-hidden />}
                         {isNeutral ? "=" : `${isPositive ? "+" : ""}${pct}%`}
-                    </div>
+                    </span>
                 )}
+            </div>
+            <div>
+                <p className="text-3xl font-extrabold leading-none tracking-tight text-slate-900 tabular-nums sm:text-4xl">{value.toLocaleString("es-AR")}</p>
+                <p className="mt-1.5 text-sm font-semibold text-slate-700">{title}</p>
+                <p className="text-xs text-slate-500">{subtitle}</p>
             </div>
         </div>
     )
@@ -72,8 +69,8 @@ function KpiCard({
 // viewBox 480×N — escala al 100% del contenedor en cualquier breakpoint.
 // El overflow-hidden en el wrapper evita el desbordamiento en mobile.
 
-const BAR_CONFIRMED = "#0ea5e9"
-const BAR_PENDING = "#fbbf24"
+const BAR_CONFIRMED = "#10b981"
+const BAR_PENDING = "#f59e0b"
 const LBL_W = 52      // ancho del área de etiquetas (izquierda del viewBox)
 const ROW_H = 24     // alto de cada barra
 const ROW_G = 10     // gap entre filas
@@ -101,7 +98,7 @@ function WeeklyBarChart({ data }: { data: DashboardStats["weeklyBreakdown"] }) {
                     <span className="text-slate-600 font-semibold">Pendientes</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded-sm bg-sky-100 border border-sky-300" />
+                    <span className="inline-block w-3 h-3 rounded-sm bg-blue-100 border border-blue-300" />
                     <span className="text-slate-600 font-semibold">Hoy</span>
                 </span>
             </div>
@@ -140,20 +137,20 @@ function WeeklyBarChart({ data }: { data: DashboardStats["weeklyBreakdown"] }) {
                             <g key={day.date}>
                                 {/* Today highlight */}
                                 {isToday && (
-                                    <rect x={LBL_W - 2} y={y - 3} width={BAR_W + 30} height={ROW_H + 6} rx={5} fill="#e0f2fe" opacity={0.75} />
+                                    <rect x={LBL_W - 2} y={y - 3} width={BAR_W + 30} height={ROW_H + 6} rx={5} fill="#dbeafe" opacity={0.75} />
                                 )}
                                 {/* Day label */}
                                 <text x={LBL_W - 6} y={y + ROW_H / 2 + 4}
                                     textAnchor="end" fontSize={10}
                                     fontWeight={isToday ? 800 : 500}
-                                    fill={isToday ? "#0284c7" : "#64748b"}>
+                                    fill={isToday ? "#1d4ed8" : "#64748b"}>
                                     {day.label}
                                 </text>
                                 {/* HOY badge */}
                                 {isToday && (
                                     <text x={LBL_W - 6} y={y + ROW_H / 2 + 14}
                                         textAnchor="end" fontSize={7} fontWeight={900}
-                                        fill="#0284c7">
+                                        fill="#1d4ed8">
                                         HOY
                                     </text>
                                 )}
@@ -198,10 +195,10 @@ function WeeklyBarChart({ data }: { data: DashboardStats["weeklyBreakdown"] }) {
 // ─── Donut Chart (SVG puro) ──────────────────────────────────────────────────
 
 const AREA_CONFIG = {
-    consultorio: { label: "Consultorio", color: "#7c3aed" },
-    internacion: { label: "Internación", color: "#0ea5e9" },
+    consultorio: { label: "Consultorio", color: "#2563eb" },
+    internacion: { label: "Internación", color: "#0891b2" },
     refuerzo: { label: "Refuerzo", color: "#f97316" },
-    piso: { label: "Piso", color: "#6366f1" },
+    piso: { label: "Piso", color: "#1e3a8a" },
 }
 
 function DonutChart({ byArea }: { byArea: DashboardStats["byArea"] }) {
@@ -297,7 +294,7 @@ function DateRangePicker({
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <button disabled={isPending} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-300 bg-white text-slate-600 hover:border-sky-400 hover:text-sky-600 transition-all whitespace-nowrap">
+                <button disabled={isPending} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 transition-all whitespace-nowrap">
                     <CalendarRange className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">Rango personalizado</span>
                     <span className="sm:hidden">Rango</span>
@@ -306,7 +303,7 @@ function DateRangePicker({
             <PopoverContent className="w-auto p-0 shadow-xl border border-slate-200 rounded-2xl overflow-hidden" align="end">
                 <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                     <div className="flex items-center gap-2">
-                        <CalendarRange className="h-4 w-4 text-sky-600" />
+                        <CalendarRange className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-bold text-slate-700">Seleccionar período</span>
                     </div>
                     <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -330,11 +327,11 @@ function DateRangePicker({
                         mode="range" selected={range} onSelect={setRange}
                         numberOfMonths={2} locale={es} className="p-3"
                         classNames={{
-                            day_selected: "bg-sky-600 text-white hover:bg-sky-700",
-                            day_range_middle: "bg-sky-100 text-sky-900 rounded-none",
-                            day_range_start: "bg-sky-600 text-white rounded-l-full",
-                            day_range_end: "bg-sky-600 text-white rounded-r-full",
-                            day_today: "font-bold border border-sky-300",
+                            day_selected: "bg-blue-600 text-white hover:bg-blue-700",
+                            day_range_middle: "bg-blue-100 text-blue-900 rounded-none",
+                            day_range_start: "bg-blue-600 text-white rounded-l-full",
+                            day_range_end: "bg-blue-600 text-white rounded-r-full",
+                            day_today: "font-bold border border-blue-300",
                         }}
                     />
                 </div>
@@ -343,11 +340,11 @@ function DateRangePicker({
                         mode="range" selected={range} onSelect={setRange}
                         numberOfMonths={1} locale={es} className="p-3"
                         classNames={{
-                            day_selected: "bg-sky-600 text-white hover:bg-sky-700",
-                            day_range_middle: "bg-sky-100 text-sky-900 rounded-none",
-                            day_range_start: "bg-sky-600 text-white rounded-l-full",
-                            day_range_end: "bg-sky-600 text-white rounded-r-full",
-                            day_today: "font-bold border border-sky-300",
+                            day_selected: "bg-blue-600 text-white hover:bg-blue-700",
+                            day_range_middle: "bg-blue-100 text-blue-900 rounded-none",
+                            day_range_start: "bg-blue-600 text-white rounded-l-full",
+                            day_range_end: "bg-blue-600 text-white rounded-r-full",
+                            day_today: "font-bold border border-blue-300",
                         }}
                     />
                 </div>
@@ -355,7 +352,7 @@ function DateRangePicker({
                     <button onClick={() => setRange(undefined)} className="text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors">Limpiar</button>
                     <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => setOpen(false)} className="text-xs h-8">Cancelar</Button>
-                        <Button size="sm" onClick={handleApply} disabled={!range?.from || !range?.to} className="text-xs h-8 bg-sky-600 hover:bg-sky-700 text-white">Aplicar</Button>
+                        <Button size="sm" onClick={handleApply} disabled={!range?.from || !range?.to} className="text-xs h-8 bg-blue-600 hover:bg-blue-700 text-white">Aplicar</Button>
                     </div>
                 </div>
             </PopoverContent>
@@ -382,13 +379,13 @@ export function AdminDashboardStats({ stats, dateFrom, dateTo, totalAllTime }: A
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* ── Period Selector ── */}
-            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-3 sm:p-4">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-3 sm:p-4">
                 {/* Top row: current period label + spinner + custom range picker */}
                 <div className="flex items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 min-w-0">
-                        <Calendar className="h-4 w-4 text-sky-600 flex-shrink-0" />
+                        <Calendar className="h-4 w-4 text-blue-600 flex-shrink-0" />
                         <span className="text-xs sm:text-sm font-bold text-slate-700 truncate">{periodLabel}</span>
-                        {isPending && <div className="w-3.5 h-3.5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />}
+                        {isPending && <div className="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full motion-safe:animate-spin flex-shrink-0" />}
                     </div>
                     <DateRangePicker dateFrom={dateFrom} dateTo={dateTo} onApply={(from, to) => changePeriod(from, to)} isPending={isPending} />
                 </div>
@@ -399,8 +396,8 @@ export function AdminDashboardStats({ stats, dateFrom, dateTo, totalAllTime }: A
                             onClick={() => { const { from, to } = get(); changePeriod(from, to, label) }}
                             disabled={isPending}
                             className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all whitespace-nowrap flex-shrink-0 ${activePeriod === label
-                                    ? "bg-sky-600 text-white border-sky-600 shadow-sm"
-                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-600 hover:bg-white"
+                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-white"
                                 }`}>
                             {label}
                         </button>
@@ -410,27 +407,27 @@ export function AdminDashboardStats({ stats, dateFrom, dateTo, totalAllTime }: A
 
             {/* ── KPI Cards ── */}
             <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
-                <KpiCard title="Total Guardias" value={stats.totalShifts} subtitle="En el período seleccionado" icon={Calendar} color="from-sky-500 to-sky-600" pct={pctTotal} />
-                <KpiCard title="Confirmadas" value={stats.confirmedShifts} subtitle="Listas para ejecución" icon={CheckCircle2} color="from-emerald-500 to-emerald-600" pct={pctConfirmed} />
-                <KpiCard title="Pendientes" value={stats.pendingShifts} subtitle="Requieren confirmación" icon={Clock} color="from-amber-500 to-amber-600" />
-                <KpiCard title="Médicos" value={stats.totalDoctors} subtitle="Personal en el sistema" icon={Users} color="from-violet-500 to-violet-600" />
+                <KpiCard title="Total Guardias" value={stats.totalShifts} subtitle="En el período seleccionado" icon={Calendar} tone="bg-blue-50 text-blue-700" pct={pctTotal} />
+                <KpiCard title="Confirmadas" value={stats.confirmedShifts} subtitle="Listas para ejecución" icon={CheckCircle2} tone="bg-emerald-50 text-emerald-700" pct={pctConfirmed} />
+                <KpiCard title="Pendientes" value={stats.pendingShifts} subtitle="Requieren confirmación" icon={Clock} tone="bg-amber-50 text-amber-700" />
+                <KpiCard title="Médicos" value={stats.totalDoctors} subtitle="Personal en el sistema" icon={Users} tone="bg-slate-100 text-slate-700" />
             </div>
 
             {/* ── Charts Row ── */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-5">
                 {/* Horizontal stacked bar chart — 3/5 on desktop, full on mobile */}
-                <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 sm:p-6">
+                <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-4 sm:p-6">
                     <div className="mb-4">
-                        <h3 className="font-bold text-slate-900">Guardias esta semana</h3>
+                        <h3 className="text-lg font-bold tracking-tight text-slate-900">Guardias esta semana</h3>
                         <p className="text-xs text-slate-400 mt-0.5">Últimos 7 días · por día</p>
                     </div>
                     <WeeklyBarChart data={stats.weeklyBreakdown} />
                 </div>
 
                 {/* Donut chart — 2/5 on desktop, full on mobile */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 sm:p-6">
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-4 sm:p-6">
                     <div className="mb-4">
-                        <h3 className="font-bold text-slate-900">Guardias por área</h3>
+                        <h3 className="text-lg font-bold tracking-tight text-slate-900">Guardias por área</h3>
                         <p className="text-xs text-slate-400 mt-0.5">En el período · distribución</p>
                     </div>
                     <DonutChart byArea={stats.byArea} />
@@ -438,7 +435,7 @@ export function AdminDashboardStats({ stats, dateFrom, dateTo, totalAllTime }: A
             </div>
 
             {/* ── Weekly Summary Table ── */}
-            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
                 <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2">
                     <LayoutGrid className="h-4 w-4 text-slate-400" />
                     <h3 className="font-bold text-slate-900 text-sm">Resumen semanal detallado</h3>
@@ -461,10 +458,10 @@ export function AdminDashboardStats({ stats, dateFrom, dateTo, totalAllTime }: A
                                 const todayStr = format(new Date(), "yyyy-MM-dd")
                                 const isToday = day.date === todayStr
                                 return (
-                                    <tr key={day.date} className={isToday ? "bg-sky-50/50" : "hover:bg-slate-50/50 transition-colors"}>
+                                    <tr key={day.date} className={isToday ? "bg-blue-50/50" : "hover:bg-slate-50/50 transition-colors"}>
                                         <td className="px-4 sm:px-6 py-3 font-semibold text-slate-700 whitespace-nowrap">
                                             {day.label}
-                                            {isToday && <span className="ml-2 text-[10px] font-bold bg-sky-100 text-sky-600 rounded-full px-2 py-0.5">HOY</span>}
+                                            {isToday && <span className="ml-2 text-[10px] font-bold bg-blue-100 text-blue-600 rounded-full px-2 py-0.5">HOY</span>}
                                         </td>
                                         <td className="text-center px-3 sm:px-4 py-3 font-black text-slate-900">{day.total}</td>
                                         <td className="text-center px-3 sm:px-4 py-3 font-semibold text-emerald-700">{day.confirmed}</td>

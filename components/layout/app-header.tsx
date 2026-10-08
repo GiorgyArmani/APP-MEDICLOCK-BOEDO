@@ -1,101 +1,79 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { Menu } from "lucide-react"
 import { NotificationBell } from "@/components/layout/notification-bell"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { Badge } from "@/components/ui/badge"
+import { UserAvatar, roleLabelKey } from "@/components/layout/user-avatar"
 import type { Doctor } from "@/lib/supabase/types"
 import { useSidebar } from "@/contexts/sidebar-context"
-import { useT } from "@/lib/i18n/language-provider"
-import type { TPath } from "@/lib/i18n/dictionaries"
+import { useLanguage } from "@/lib/i18n/language-provider"
+import { intlLocales } from "@/lib/i18n/config"
 import { cn } from "@/lib/utils"
 
 interface AppHeaderProps {
     doctor?: Doctor
 }
 
-const roleLabelKeys: Record<string, TPath> = {
-    doctor: "roles.doctor",
-    administrator: "roles.administrator",
-    honorarios: "roles.honorarios",
-}
-
 export function AppHeader({ doctor }: AppHeaderProps) {
-    const t = useT()
-    const { isCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar()
-    const dashboardLink = doctor?.role === "administrator"
-        ? "/admin"
-        : doctor?.role === "honorarios"
-            ? "/honorarios"
-            : "/dashboard"
+    const { t, locale } = useLanguage()
+    const { isCollapsed, setIsMobileOpen } = useSidebar()
+    const homeHref = doctor?.role === "administrator" ? "/admin" : doctor?.role === "honorarios" ? "/honorarios" : "/dashboard"
+
+    // Rendered after mount so server and client never disagree on the date.
+    const [today, setToday] = useState("")
+    useEffect(() => {
+        setToday(
+            new Date().toLocaleDateString(intlLocales[locale], {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                timeZone: "America/Argentina/Buenos_Aires",
+            }),
+        )
+    }, [locale])
 
     return (
         <header
             className={cn(
-                "fixed top-0 left-0 right-0 h-16 bg-sidebar text-sidebar-foreground border-b border-sidebar-border z-50 transition-all duration-300"
+                "fixed right-0 top-0 z-30 h-16 border-b border-slate-200/80 bg-white/85 backdrop-blur-lg transition-[left] duration-300 ease-out",
+                "left-0",
+                isCollapsed ? "lg:left-[76px]" : "lg:left-64",
             )}
         >
-            <div className="h-full px-4 flex items-center justify-between">
-                {/* App Name/Logo - Link to dashboard on desktop, Toggle sidebar on mobile */}
-                <div className="flex items-center gap-3">
-                    <Link
-                        href={dashboardLink}
-                        className="flex items-center gap-3 hover:opacity-80 transition-opacity hidden lg:flex"
-                    >
-                        <div className="bg-primary p-2 rounded-lg">
-                            <Image
-                                src="/logo.png"
-                                alt="Medi Clock Logo"
-                                width={24}
-                                height={24}
-                                className="h-6 w-6 text-white"
-                            />
-                        </div>
-                        <div>
-                            <h1 className="font-bold text-lg">Medi Clock</h1>
-                            <p className="text-xs text-sidebar-foreground/60 hidden sm:block">{t("nav.appTagline")}</p>
-                        </div>
-                    </Link>
+            <div className="flex h-full items-center gap-3 px-4 sm:px-6">
+                <button
+                    type="button"
+                    onClick={() => setIsMobileOpen(true)}
+                    aria-label={t("nav.openMenu")}
+                    className="-ml-1 flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+                >
+                    <Menu className="h-5 w-5" aria-hidden />
+                </button>
 
-                    {/* Mobile version (trigger) */}
-                    <div
-                        className="flex items-center gap-3 cursor-pointer lg:hidden"
-                        onClick={() => setIsMobileOpen(!isMobileOpen)}
-                    >
-                        <div className="bg-primary p-2 rounded-lg">
-                            <Image
-                                src="/logo.png"
-                                alt="Medi Clock Logo"
-                                width={24}
-                                height={24}
-                                className="h-6 w-6 text-white"
-                            />
-                        </div>
-                        <div>
-                            <h1 className="font-bold text-lg">Medi Clock</h1>
-                            <p className="text-xs text-sidebar-foreground/60 hidden sm:block">{t("nav.appTagline")}</p>
-                        </div>
-                    </div>
-                </div>
+                <Link href={homeHref} className="flex items-center gap-2 lg:hidden">
+                    <Image src="/logo.svg" alt="" width={32} height={32} className="h-8 w-8" />
+                    <span className="text-base font-bold tracking-tight text-slate-900">MediClock</span>
+                </Link>
 
-                {/* Right side: User Info and Notifications */}
-                <div className="flex items-center gap-6">
+                <p className="hidden text-sm font-medium text-slate-500 first-letter:uppercase lg:block">{today}</p>
+
+                <div className="ml-auto flex items-center gap-1 sm:gap-2">
+                    <LanguageSwitcher className="h-10 text-slate-600 hover:text-slate-900" />
                     {doctor && (
                         <>
-                            <div className="hidden md:flex flex-col items-end">
-                                <p className="text-sm font-medium leading-none mb-1">{doctor.full_name}</p>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-xs text-sidebar-foreground/60 truncate max-w-[150px]">{doctor.email}</p>
-                                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5 py-0 bg-sidebar-accent text-sidebar-foreground/80 border-sidebar-border">
-                                        {roleLabelKeys[doctor.role] ? t(roleLabelKeys[doctor.role]) : doctor.role}
-                                    </Badge>
-                                </div>
-                            </div>
                             <NotificationBell doctorId={doctor.id} recipientRole={doctor.role} />
+                            <div className="ml-1 hidden items-center gap-3 border-l border-slate-200 pl-4 md:flex">
+                                <div className="text-right leading-tight">
+                                    <p className="max-w-[180px] truncate text-sm font-semibold text-slate-900">{doctor.full_name}</p>
+                                    <p className="text-xs text-slate-500">{t(roleLabelKey(doctor.role))}</p>
+                                </div>
+                                <UserAvatar name={doctor.full_name} className="h-9 w-9 ring-slate-100" />
+                            </div>
                         </>
                     )}
-                    <LanguageSwitcher className="text-sidebar-foreground/70 hover:text-sidebar-foreground" />
                 </div>
             </div>
         </header>

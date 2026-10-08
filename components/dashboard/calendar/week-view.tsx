@@ -155,10 +155,10 @@ export function WeekView({ currentDate, shifts, onDayClick, onShiftClick, doctor
                                                 const height = duration * 60
 
                                                 const areaColors: Record<string, string> = {
-                                                    consultorio: 'border-purple-500',
-                                                    internacion: 'border-blue-500',
+                                                    consultorio: 'border-blue-500',
+                                                    internacion: 'border-cyan-500',
                                                     refuerzo: 'border-orange-500',
-                                                    piso: 'border-indigo-500'
+                                                    piso: 'border-blue-900'
                                                 }
                                                 const accentColor = areaColors[shift.shift_area] || 'border-slate-500'
 

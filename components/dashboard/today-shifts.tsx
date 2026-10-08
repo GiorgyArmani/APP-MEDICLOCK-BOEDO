@@ -2,7 +2,6 @@
 
 import type { Shift, Doctor } from "@/lib/supabase/types"
 import { ShiftCard } from "@/components/dashboard/shift-card"
-import { Clock, CalendarCheck } from "lucide-react"
 import { useT } from "@/lib/i18n/language-provider"
 
 interface TodayShiftsProps {
@@ -27,29 +26,23 @@ export function TodayShifts({ shifts, currentDoctor }: TodayShiftsProps) {
     if (todayShifts.length === 0) return null
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-emerald-100 rounded-full">
-                    <Clock className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-900">
-                    {t("todayShifts.title")}
-                </h2>
-                <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+        <section className="rounded-3xl border border-emerald-200 bg-gradient-to-b from-emerald-50/80 to-white p-4 sm:p-6">
+            <div className="mb-4 flex items-center gap-3">
+                <span className="relative flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                </span>
+                <h2 className="text-lg font-bold text-slate-900">{t("todayShifts.title")}</h2>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
                     {t("todayShifts.inProgress")}
                 </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {todayShifts.map((shift) => (
-                    <div key={shift.id} className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                        <div className="relative">
-                            <ShiftCard shift={shift} doctorId={currentDoctor.id} />
-                        </div>
-                    </div>
+                    <ShiftCard key={shift.id} shift={shift} doctorId={currentDoctor.id} />
                 ))}
             </div>
-        </div>
+        </section>
     )
 }

@@ -43,7 +43,7 @@ export default async function HonorariosCalendarPage({ searchParams }: Honorario
     ])
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-20 lg:pt-8 px-4 pb-8">
+        <div className="px-4 py-8 sm:px-6">
             <div className="container mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export default async function HonorariosCalendarPage({ searchParams }: Honorario
                             <Calendar className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Calendario Auditoría</h1>
+                            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Calendario Auditoría</h1>
                             <p className="text-sm text-slate-600">Visualización de todas las guardias del sistema (Solo lectura)</p>
                         </div>
                     </div>

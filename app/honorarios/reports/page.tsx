@@ -32,12 +32,12 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
     ])
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <main className="container mx-auto px-4 py-8 space-y-8 pt-20 lg:pt-8">
+        <div>
+            <main className="container mx-auto px-4 py-8 space-y-8">
                 {/* Page Header */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Generador de Reportes</h1>
-                    <p className="text-slate-500 font-medium mt-1">Exporta guardias por médico y período para procesamiento de honorarios</p>
+                <div>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Generador de Reportes</h1>
+                    <p className="mt-1.5 text-slate-600">Exporta guardias por médico y período para procesamiento de honorarios</p>
                 </div>
 
                 {/* Reports Generator */}

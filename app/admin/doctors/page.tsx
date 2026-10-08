@@ -22,7 +22,7 @@ export default async function DoctorsPage() {
         <div className="container mx-auto px-4 py-8 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Médicos</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Médicos</h1>
                     <p className="text-slate-600">Gestión de médicos del sistema. Haz clic en un médico para ver su calendario.</p>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">

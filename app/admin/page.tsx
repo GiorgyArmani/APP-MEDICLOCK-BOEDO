@@ -36,18 +36,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const allTimeStats = await getDashboardStats("2000-01-01", format(today, "yyyy-MM-dd"))
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div>
       {/* FAB for mobile */}
       <div className="fixed bottom-6 right-6 z-40 lg:hidden">
         <CreateShiftDialog doctors={doctors} variant="fab" />
       </div>
 
-      <main className="container mx-auto px-4 py-8 space-y-8 pt-20 lg:pt-8">
+      <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Panel de Administración</h1>
-            <p className="text-slate-500 font-medium">Gestión integral de guardias y personal médico</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Panel de Administración</h1>
+            <p className="mt-1.5 text-slate-600">Gestión integral de guardias y personal médico</p>
           </div>
           <div className="hidden lg:block">
             <CreateShiftDialog doctors={doctors} />

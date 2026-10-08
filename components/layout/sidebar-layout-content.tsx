@@ -17,12 +17,12 @@ export function SidebarLayoutContent({ doctor, children }: SidebarLayoutContentP
     const { isCollapsed } = useSidebar()
 
     return (
-        <div className="flex-1 flex flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
             <AppHeader doctor={doctor} />
             <main
                 className={cn(
-                    "flex-1 mt-16 bg-slate-50 transition-all duration-300",
-                    isCollapsed ? "lg:ml-20" : "lg:ml-64"
+                    "mt-16 min-h-[calc(100dvh-4rem)] flex-1 bg-[#f6f7f9] transition-[margin] duration-300 ease-out",
+                    isCollapsed ? "lg:ml-[76px]" : "lg:ml-64",
                 )}
             >
                 {children}

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Download, FileSpreadsheet, Calendar as CalendarIcon } from "lucide-react"
+import { AlertOctagon, AlertTriangle, CalendarDays, CalendarRange, Download, FileSpreadsheet, Moon, Sun, Calendar as CalendarIcon } from "lucide-react"
 import { toast } from "sonner"
 import {
     formatShiftDataForExport,
@@ -319,8 +319,8 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos los turnos</SelectItem>
-                                <SelectItem value="dia">🌞 Día</SelectItem>
-                                <SelectItem value="noche">🌙 Noche</SelectItem>
+                                <SelectItem value="dia">Día</SelectItem>
+                                <SelectItem value="noche">Noche</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -336,8 +336,8 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos los días</SelectItem>
-                                <SelectItem value="semana">📅 Semana</SelectItem>
-                                <SelectItem value="finde">🎉 Fin de Semana</SelectItem>
+                                <SelectItem value="semana">Semana</SelectItem>
+                                <SelectItem value="finde">Fin de Semana</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -379,27 +379,27 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs text-slate-500">🌞 Turno Día</p>
+                            <p className="flex items-center gap-1.5 text-xs text-slate-500"><Sun className="h-3.5 w-3.5" aria-hidden /> Turno Día</p>
                             <p className="text-2xl font-bold text-amber-600">
                                 {filteredShifts.filter(s => getShiftTurn(s.shift_hours) === "Día").length}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs text-slate-500">🌙 Turno Noche</p>
-                            <p className="text-2xl font-bold text-indigo-600">
+                            <p className="flex items-center gap-1.5 text-xs text-slate-500"><Moon className="h-3.5 w-3.5" aria-hidden /> Turno Noche</p>
+                            <p className="text-2xl font-bold text-slate-900">
                                 {filteredShifts.filter(s => getShiftTurn(s.shift_hours) === "Noche").length}
                             </p>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
                         <div>
-                            <p className="text-xs text-slate-500">📅 Guardias de Semana</p>
+                            <p className="flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays className="h-3.5 w-3.5" aria-hidden /> Guardias de Semana</p>
                             <p className="text-xl font-bold text-slate-700">
                                 {filteredShifts.filter(s => getDayType(s.shift_date) === "Semana").length}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs text-slate-500">🎉 Fin de Semana</p>
+                            <p className="flex items-center gap-1.5 text-xs text-slate-500"><CalendarRange className="h-3.5 w-3.5" aria-hidden /> Fin de Semana</p>
                             <p className="text-xl font-bold text-slate-700">
                                 {filteredShifts.filter(s => getDayType(s.shift_date) === "Fin de Semana").length}
                             </p>
@@ -407,7 +407,7 @@ export function ReportsGenerator({ shifts, doctors }: ReportsGeneratorProps) {
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200">
                         <div>
-                            <p className="text-xs text-rose-500 font-medium">⚠️ Tardanzas</p>
+                            <p className="flex items-center gap-1.5 text-xs font-medium text-rose-600"><AlertTriangle className="h-3.5 w-3.5" aria-hidden /> Tardanzas</p>
                             <p className="text-xl font-bold text-rose-600">
                                 {filteredShifts.filter(s => getPresentismo(s) === "Tardanza").length}
                             </p>

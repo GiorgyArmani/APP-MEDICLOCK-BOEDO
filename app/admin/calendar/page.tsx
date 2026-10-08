@@ -41,7 +41,7 @@ export default async function AdminCalendarPage({ searchParams }: AdminCalendarP
     ])
 
     return (
-        <div className="min-h-screen bg-slate-50 pt-20 lg:pt-8 px-4 pb-8">
+        <div className="px-4 py-8 sm:px-6">
             <div className="container mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -49,7 +49,7 @@ export default async function AdminCalendarPage({ searchParams }: AdminCalendarP
                             <Calendar className="h-6 w-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Calendario de Guardias</h1>
+                            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Calendario de Guardias</h1>
                             <p className="text-sm text-slate-600">Visualización mensual, semanal y diaria de todas las guardias</p>
                         </div>
                     </div>

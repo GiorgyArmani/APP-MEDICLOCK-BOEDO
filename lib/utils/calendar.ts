@@ -114,11 +114,11 @@ export function getShiftStatusIndicatorColor(status: string): string {
  */
 export function getShiftAreaColor(area: string): string {
     const colors: Record<string, string> = {
-        consultorio: 'bg-purple-600',
-        internacion: 'bg-blue-600',
+        consultorio: 'bg-blue-600',
+        internacion: 'bg-cyan-600',
         refuerzo: 'bg-orange-600',
-        completo: 'bg-emerald-600',
-        piso: 'bg-indigo-600'
+        completo: 'bg-blue-600',
+        piso: 'bg-blue-900'
     }
     return colors[area] || 'bg-slate-600'
 }
@@ -128,11 +128,11 @@ export function getShiftAreaColor(area: string): string {
  */
 export function getShiftAreaStyles(area: string): string {
     const styles: Record<string, string> = {
-        consultorio: 'bg-purple-500/10 border-purple-200 text-purple-900',
-        internacion: 'bg-blue-500/10 border-blue-200 text-blue-900',
+        consultorio: 'bg-blue-500/10 border-blue-200 text-blue-900',
+        internacion: 'bg-cyan-500/10 border-cyan-200 text-cyan-900',
         refuerzo: 'bg-orange-500/10 border-orange-200 text-orange-900',
-        completo: 'bg-emerald-500/10 border-emerald-200 text-emerald-900',
-        piso: 'bg-indigo-500/10 border-indigo-200 text-indigo-900'
+        completo: 'bg-blue-500/10 border-blue-200 text-blue-900',
+        piso: 'bg-blue-900/10 border-blue-200 text-blue-900'
     }
     return styles[area] || 'bg-slate-500/10 border-slate-200 text-slate-900'
 }
@@ -142,11 +142,11 @@ export function getShiftAreaStyles(area: string): string {
  */
 export function getShiftAreaAccentColor(area: string): string {
     const accents: Record<string, string> = {
-        consultorio: 'bg-purple-500',
-        internacion: 'bg-blue-500',
+        consultorio: 'bg-blue-500',
+        internacion: 'bg-cyan-500',
         refuerzo: 'bg-orange-500',
-        completo: 'bg-emerald-500',
-        piso: 'bg-indigo-500'
+        completo: 'bg-blue-500',
+        piso: 'bg-blue-900'
     }
     return accents[area] || 'bg-slate-500'
 }
