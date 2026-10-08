@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MediClock">
+  <defs>
+    <linearGradient id="mc-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#mc-bg)"/>
+  <g transform="translate(0 16)">
+    <!-- stopwatch crown: time tracking -->
+    <rect x="224" y="50" width="64" height="44" rx="14" fill="#FFFFFF"/>
+    <!-- clock ring -->
+    <circle cx="256" cy="256" r="150" fill="none" stroke="#FFFFFF" stroke-width="36"/>
+    <!-- tracked time (12 to 3 o'clock) -->
+    <path d="M256 106 A150 150 0 0 1 406 256" fill="none" stroke="#34D399" stroke-width="36" stroke-linecap="round"/>
+    <!-- medical cross -->
+    <rect x="221" y="161" width="70" height="190" rx="16" fill="#FFFFFF"/>
+    <rect x="161" y="221" width="190" height="70" rx="16" fill="#FFFFFF"/>
+  </g>
+</svg>
